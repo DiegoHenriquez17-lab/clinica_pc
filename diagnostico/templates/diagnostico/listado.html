@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Listado Diagnósticos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Diagnósticos Realizados</h2>
+  {% if diagnosticos %}
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Estudiante</th>
+        <th>Equipo</th>
+        <th>Diagnóstico</th>
+        <th>Solución</th>
+        <th>Tipo de Solución</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in diagnosticos %}
+      <tr>
+        <td>{{ d.estudiante }}</td>
+        <td>{{ d.equipo }}</td>
+        <td>{{ d.diagnostico }}</td>
+        <td>{{ d.solucion }}</td>
+        <td>
+          {% if d.tipo_solucion == "Correctiva" %}
+          <span class="badge bg-danger">Correctiva</span>
+          {% else %}
+          <span class="badge bg-warning text-dark">Preventiva</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No hay diagnósticos registrados.</p>
+  {% endif %}
+</div>
+{% endblock %}

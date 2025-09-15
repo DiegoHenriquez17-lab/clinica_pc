@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Comprobante de Entrega</h2>
+
+  {% if equipo %}
+    <p><b>Cliente:</b> {{ equipo.estudiante }}</p>
+    <p><b>Diagnóstico:</b> {{ equipo.diagnostico }}</p>
+    <p><b>Solución:</b> {{ equipo.solucion }}</p>
+  {% endif %}
+
+  {% if entrega %}
+    <p><b>Estado final:</b> {{ entrega.estado }}</p>
+    <p><b>Observaciones:</b> {{ entrega.observaciones }}</p>
+  {% endif %}
+
+  <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Volver al Panel</a>
+</div>
+{% endblock %}

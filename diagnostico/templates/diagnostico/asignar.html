@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Asignar Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:600px">
+  <h2>Asignar Equipo a Estudiante</h2>
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+  <label class="form-label">Estudiante</label>
+  <select name="estudiante" class="form-control" required>
+    <option value="" disabled selected>-- Selecciona un estudiante --</option>
+    {% for est in estudiantes %}
+    <option value="{{ est }}">{{ est }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Equipo (Cliente - Tipo)</label>
+  <select name="equipo" class="form-control" required>
+    <option value="" disabled selected>-- Selecciona un equipo recibido --</option>
+    {% for idx, eq in equipos %}
+      <option value="{{ idx }}">{{ eq.nombre }} - {{ eq.tipo_equipo }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+    <button class="btn btn-primary">Asignar</button>
+  </form>
+</div>
+{% endblock %}

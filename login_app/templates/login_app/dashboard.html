@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Panel Principal{% endblock %}
+
+{% block content %}
+<style>
+  .menu-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 1rem;
+    cursor: pointer;
+  }
+  .menu-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  .menu-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+</style>
+
+<div class="container mt-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">👋 Bienvenido, {{ user.username }}</h2>
+    <p class="text-muted">Selecciona una de las opciones para continuar:</p>
+  </div>
+
+  <div class="row justify-content-center g-4">
+    <div class="col-md-3">
+      <a href="{% url 'recepcion:registrar' %}" class="text-decoration-none text-dark">
+        <div class="card menu-card text-center p-4 bg-success text-white shadow-sm">
+          <span class="menu-icon">📋</span>
+          <h5 class="fw-bold">Recepción</h5>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="{% url 'diagnostico:asignar' %}" class="text-decoration-none text-dark">
+        <div class="card menu-card text-center p-4 bg-info text-white shadow-sm">
+          <span class="menu-icon">🩺</span>
+          <h5 class="fw-bold">Diagnóstico</h5>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="{% url 'entrega:listado' %}" class="text-decoration-none text-dark">
+        <div class="card menu-card text-center p-4 bg-warning text-dark shadow-sm">
+          <span class="menu-icon">📦</span>
+          <h5 class="fw-bold">Entrega</h5>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

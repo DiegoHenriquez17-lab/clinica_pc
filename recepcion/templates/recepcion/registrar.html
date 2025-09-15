@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Registrar Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:520px">
+  <h2>Registrar Equipo</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Cliente</label>
+      <select name="nombre" class="form-control" required>
+        <option value="">-- Selecciona un estudiante --</option>
+        {% for estudiante in estudiantes %}
+          <option value="{{ estudiante }}">{{ estudiante }}</option>
+        {% endfor %}
+      </select>
+    </div>
+   <div class="mb-3">
+  <label class="form-label">Tipo de Equipo</label>
+  <select name="tipo_equipo" class="form-control" required>
+    <option value="">-- Selecciona un tipo de equipo --</option>
+    {% for tipo in tipos_equipos %}
+      <option value="{{ tipo }}">{{ tipo }}</option>
+    {% endfor %}
+  </select>
+</div>
+    <div class="mb-3">
+      <label class="form-label">Problema Informado</label>
+      <textarea class="form-control" name="problema" required></textarea>
+    </div>
+    <button class="btn btn-success" type="submit">Registrar</button>
+  </form>
+</div>
+{% endblock %}

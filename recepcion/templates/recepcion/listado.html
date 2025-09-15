@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Listado de Equipos{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Listado de Equipos Registrados</h2>
+  {% if equipos %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Tipo de Equipo</th>
+          <th>Problema</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for eq in equipos %}
+        <tr>
+          <td>{{ eq.nombre }}</td>
+          <td>{{ eq.tipo_equipo }}</td>
+          <td>{{ eq.problema }}</td>
+          <td><a href="{% url 'recepcion:detalle' eq.nombre %}" class="btn btn-info btn-sm">Ver</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hay equipos registrados.</p>
+  {% endif %}
+</div>
+{% endblock %}

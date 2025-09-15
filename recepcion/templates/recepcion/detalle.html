@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Detalle Equipo{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  {% if equipo %}
+    <h2>Detalle del Equipo</h2>
+    <p><strong>Cliente:</strong> {{ equipo.nombre }}</p>
+    <p><strong>Tipo de Equipo:</strong> {{ equipo.tipo_equipo }}</p>
+    <p><strong>Problema:</strong> {{ equipo.problema }}</p>
+  {% else %}
+    <p class="text-danger">No se encontró el equipo.</p>
+  {% endif %}
+</div>
+{% endblock %}

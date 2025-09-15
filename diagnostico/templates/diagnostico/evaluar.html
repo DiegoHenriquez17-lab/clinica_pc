@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Evaluar Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width:600px">
+  <h2>Evaluar Equipo</h2>
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+  <label class="form-label">Estudiante</label>
+  <select name="estudiante" class="form-control" required>
+    <option value="" disabled selected>-- Selecciona un estudiante --</option>
+    {% for a in asignaciones %}
+    <option value="{{ a.estudiante }}">{{ a.estudiante }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Equipo</label>
+  <select name="equipo" class="form-control" required>
+    <option value="" disabled selected>-- Selecciona un equipo --</option>
+    {% for a in asignaciones %}
+      <option value="{{ a.equipo.nombre }} - {{ a.equipo.tipo_equipo }}">
+        {{ a.equipo.nombre }} - {{ a.equipo.tipo_equipo }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+    <div class="mb-3">
+      <label class="form-label">Diagnóstico</label>
+      <textarea name="diagnostico" class="form-control" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Solución</label>
+      <textarea name="solucion" class="form-control" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Tipo de Solución</label>
+      <select name="tipo_solucion" class="form-control" required>
+        <option value="Correctiva">Correctiva</option>
+        <option value="Preventiva">Preventiva</option>
+      </select>
+    </div>
+
+    <button class="btn btn-success">Guardar Diagnóstico</button>
+  </form>
+</div>
+{% endblock %}
