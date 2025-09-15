@@ -1,57 +1,124 @@
 {% extends "base.html" %}
-{% block title %}Panel Principal{% endblock %}
+{% block title %}Panel de Control · Clínica PC{% endblock %}
+{% block page_title %}Panel de Control{% endblock %}
 
 {% block content %}
-<style>
-  .menu-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-radius: 1rem;
-    cursor: pointer;
-  }
-  .menu-card:hover {
-    transform: translateY(-8px) scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  }
-  .menu-icon {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    display: block;
-  }
-</style>
+<div class="row g-3">
 
-<div class="container mt-5">
-  <div class="text-center mb-5">
-    <h2 class="fw-bold">👋 Bienvenido, {{ user.username }}</h2>
-    <p class="text-muted">Selecciona una de las opciones para continuar:</p>
-  </div>
-
-  <div class="row justify-content-center g-4">
-    <div class="col-md-3">
-      <a href="{% url 'recepcion:registrar' %}" class="text-decoration-none text-dark">
-        <div class="card menu-card text-center p-4 bg-success text-white shadow-sm">
-          <span class="menu-icon">📋</span>
-          <h5 class="fw-bold">Recepción</h5>
+  <!-- KPIs -->
+  <div class="col-12 col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="text-muted m-0">Recepción</h6>
+          <span class="badge bg-primary-subtle text-primary">{{ total_recepcion }} total</span>
         </div>
-      </a>
-    </div>
-
-    <div class="col-md-3">
-      <a href="{% url 'diagnostico:asignar' %}" class="text-decoration-none text-dark">
-        <div class="card menu-card text-center p-4 bg-info text-white shadow-sm">
-          <span class="menu-icon">🩺</span>
-          <h5 class="fw-bold">Diagnóstico</h5>
+        <div class="display-6 fw-semibold mt-2">{{ total_recepcion }}</div>
+        <div class="progress mt-3" role="progressbar" aria-label="Progreso recepción"
+             aria-valuenow="{{ pct_recepcion|default:0 }}" aria-valuemin="0" aria-valuemax="100" style="height: 6px;">
+          <div class="progress-bar" style="width: {{ pct_recepcion|default:0 }}%"></div>
         </div>
-      </a>
-    </div>
-
-    <div class="col-md-3">
-      <a href="{% url 'entrega:listado' %}" class="text-decoration-none text-dark">
-        <div class="card menu-card text-center p-4 bg-warning text-dark shadow-sm">
-          <span class="menu-icon">📦</span>
-          <h5 class="fw-bold">Entrega</h5>
-        </div>
-      </a>
+        <small class="text-muted d-block mt-2">Equipos registrados en recepción</small>
+      </div>
     </div>
   </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="text-muted m-0">Diagnósticos</h6>
+          <span class="badge bg-success-subtle text-success">{{ total_diagnosticos }} total</span>
+        </div>
+        <div class="display-6 fw-semibold mt-2">{{ total_diagnosticos }}</div>
+        <div class="progress mt-3" role="progressbar" aria-label="Progreso diagnóstico"
+             aria-valuenow="{{ pct_diag_vs_rec|default:0 }}" aria-valuemin="0" aria-valuemax="100" style="height: 6px;">
+          <div class="progress-bar bg-success" style="width: {{ pct_diag_vs_rec|default:0 }}%"></div>
+        </div>
+        <small class="text-muted d-block mt-2">Diagnósticos vs. recepción</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="text-muted m-0">Entregas</h6>
+          <span class="badge bg-info-subtle text-info">{{ total_entregas }} total</span>
+        </div>
+        <div class="display-6 fw-semibold mt-2">{{ total_entregas }}</div>
+        <div class="progress mt-3" role="progressbar" aria-label="Progreso entregas"
+             aria-valuenow="{{ pct_entrega_vs_diag|default:0 }}" aria-valuemin="0" aria-valuemax="100" style="height: 6px;">
+          <div class="progress-bar bg-info" style="width: {{ pct_entrega_vs_diag|default:0 }}%"></div>
+        </div>
+        <small class="text-muted d-block mt-2">Entregas vs. diagnósticos</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pendientes & enlaces rápidos -->
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="text-muted m-0">Pendientes</h6>
+          <span class="badge bg-warning text-dark">{{ pendientes_entrega }} sin entregar</span>
+        </div>
+        {% if pendientes_list %}
+          <ul class="list-group list-group-flush mt-2">
+            {% for nombre in pendientes_list %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="text-truncate">{{ nombre }}</span>
+                <div class="btn-group">
+                  <a href="{% url 'entrega:verificar' nombre %}" class="btn btn-sm btn-outline-primary">Verificar</a>
+                  <a href="{% url 'entrega:reporte' nombre %}" class="btn btn-sm btn-primary">Entregar</a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted mt-3 mb-0">¡No hay pendientes de entrega!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="text-muted">Acciones rápidas</h6>
+        <div class="row g-2 mt-2">
+          <div class="col-12 col-sm-6 d-grid">
+            <a href="{% url 'recepcion:registrar' %}" class="btn btn-outline-secondary"> Registrar equipo</a>
+          </div>
+          <div class="col-12 col-sm-6 d-grid">
+            <a href="{% url 'diagnostico:asignar' %}" class="btn btn-outline-secondary"> Asignar diagnóstico</a>
+          </div>
+          <div class="col-12 col-sm-6 d-grid">
+            <a href="{% url 'diagnostico:evaluar' %}" class="btn btn-outline-secondary"> Evaluar equipo</a>
+          </div>
+          <div class="col-12 col-sm-6 d-grid">
+            <a href="{% url 'entrega:listado' %}" class="btn btn-outline-secondary"> Ver entregas</a>
+          </div>
+        </div>
+
+        <h6 class="text-muted mt-4">Actividad reciente</h6>
+        {% if recientes %}
+          <ul class="list-group list-group-flush mt-2">
+            {% for item in recientes %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="text-truncate">{{ item.txt }}</span>
+                <small class="text-muted">{{ item.when }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted mt-2 mb-0">Aún no hay actividad registrada.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

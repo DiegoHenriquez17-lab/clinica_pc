@@ -1,31 +1,30 @@
+{# templates/recepcion/listado.html #}
 {% extends "base.html" %}
-{% block title %}Listado de Equipos{% endblock %}
+{% block title %}Listado recepción · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Listado{% endblock %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Listado de Equipos Registrados</h2>
-  {% if equipos %}
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Tipo de Equipo</th>
-          <th>Problema</th>
-          <th>Detalle</th>
-        </tr>
+{% if equipos %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr><th>#</th><th>Estudiante</th><th>Tipo</th><th>Problema</th><th class="text-end">Acciones</th></tr>
       </thead>
       <tbody>
         {% for eq in equipos %}
-        <tr>
-          <td>{{ eq.nombre }}</td>
-          <td>{{ eq.tipo_equipo }}</td>
-          <td>{{ eq.problema }}</td>
-          <td><a href="{% url 'recepcion:detalle' eq.nombre %}" class="btn btn-info btn-sm">Ver</a></td>
-        </tr>
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ eq.nombre }}</td>
+            <td>{{ eq.tipo_equipo }}</td>
+            <td class="text-truncate" style="max-width:380px">{{ eq.problema }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'recepcion:detalle' eq.nombre %}">Detalle</a>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
-  {% else %}
-    <p>No hay equipos registrados.</p>
-  {% endif %}
-</div>
+  </div>
+{% else %}
+  <p class="text-muted m-0">No hay registros aún. <a href="{% url 'recepcion:registrar' %}">Registra el primero</a>.</p>
+{% endif %}
 {% endblock %}

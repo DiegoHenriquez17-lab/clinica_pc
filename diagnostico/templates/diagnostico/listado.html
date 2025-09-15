@@ -1,40 +1,28 @@
+{# templates/diagnostico/listado.html #}
 {% extends "base.html" %}
-{% block title %}Listado Diagnósticos{% endblock %}
-
+{% block title %}Listado diagnósticos · Clínica PC{% endblock %}
+{% block page_title %}Diagnóstico · Listado{% endblock %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Diagnósticos Realizados</h2>
-  {% if diagnosticos %}
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Estudiante</th>
-        <th>Equipo</th>
-        <th>Diagnóstico</th>
-        <th>Solución</th>
-        <th>Tipo de Solución</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for d in diagnosticos %}
-      <tr>
-        <td>{{ d.estudiante }}</td>
-        <td>{{ d.equipo }}</td>
-        <td>{{ d.diagnostico }}</td>
-        <td>{{ d.solucion }}</td>
-        <td>
-          {% if d.tipo_solucion == "Correctiva" %}
-          <span class="badge bg-danger">Correctiva</span>
-          {% else %}
-          <span class="badge bg-warning text-dark">Preventiva</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p>No hay diagnósticos registrados.</p>
-  {% endif %}
-</div>
+{% if diagnosticos %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr><th>#</th><th>Estudiante</th><th>Equipo</th><th>Diagnóstico</th><th>Tipo</th></tr>
+      </thead>
+      <tbody>
+        {% for d in diagnosticos %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ d.estudiante }}</td>
+            <td>{{ d.equipo }}</td>
+            <td class="text-truncate" style="max-width:380px">{{ d.diagnostico }}</td>
+            <td>{{ d.tipo_solucion|capfirst }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted m-0">No hay diagnósticos registrados aún.</p>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,11 @@
+
+.card { border-radius: 1rem; }
+.form-control, .form-select { border-radius: .6rem; }
+.table td, .table th { vertical-align: middle; }
+
+
+@media print {
+  nav, footer, .btn, .toast-container { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .card, .card-body { border: none !important; box-shadow: none !important; }
+}

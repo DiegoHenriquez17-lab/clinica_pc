@@ -1,19 +1,21 @@
+{# templates/entrega/listado.html #}
 {% extends "base.html" %}
+{% block title %}Clientes para entrega · Clínica PC{% endblock %}
+{% block page_title %}Entrega · Clientes diagnosticados{% endblock %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Clientes con Diagnóstico</h2>
-
-  {% if clientes %}
-    <ul class="list-group">
-      {% for c in clientes %}
+{% if clientes %}
+  <ul class="list-group">
+    {% for n in clientes %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
-        {{ c }}
-        <a href="{% url 'entrega:verificar' c %}" class="btn btn-primary btn-sm">Verificar Entrega</a>
+        <span>{{ n }}</span>
+        <div class="btn-group">
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'entrega:verificar' n %}">Verificar</a>
+          <a class="btn btn-sm btn-primary" href="{% url 'entrega:reporte' n %}">Reporte</a>
+        </div>
       </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-muted">No hay clientes con diagnóstico aún.</p>
-  {% endif %}
-</div>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="text-muted m-0">Aún no hay clientes con diagnóstico.</p>
+{% endif %}
 {% endblock %}

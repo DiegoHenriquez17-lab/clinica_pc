@@ -1,24 +1,35 @@
 {% extends "base.html" %}
+{% block title %}Verificar estado · Clínica PC{% endblock %}
+{% block page_title %}Entrega · Verificar estado{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Verificar estado de equipo</h2>
+<form method="get" class="row g-2">
+  <div class="col-12 col-sm-9">
+    <input class="form-control" type="search" name="q" value="{{ query }}" placeholder="Buscar cliente por nombre…" autofocus>
+  </div>
+  <div class="col-12 col-sm-3 d-grid">
+    <button class="btn btn-primary">Buscar</button>
+  </div>
+</form>
 
-  {% if equipo %}
-    <div class="card mt-3 p-3">
-      <h4>
-        Equipo de: {{ equipo.estudiante }}
-      </h4>
-      <p><b>Diagnóstico:</b> {{ equipo.diagnostico }}</p>
-      <p><b>Solución:</b> {{ equipo.solucion }}</p>
+{% if query %}
+  <hr class="my-3">
+  <h6 class="text-muted mb-2">Resultados para: “{{ query }}”</h6>
 
-      {% if entrega %}
-        <p><b>Estado final:</b> {{ entrega.estado }}</p>
-        <p><b>Observaciones:</b> {{ entrega.observaciones }}</p>
-        <a href="{% url 'entrega:comprobante' equipo.estudiante %}" class="btn btn-secondary">Ver Comprobante</a>
-      {% else %}
-        <a href="{% url 'entrega:reporte' equipo.estudiante %}" class="btn btn-success">Registrar Entrega</a>
-      {% endif %}
-    </div>
+  {% if resultados %}
+    <ul class="list-group">
+      {% for nombre in resultados %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span class="text-truncate">{{ nombre }}</span>
+          <div class="btn-group">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'entrega:verificar' nombre %}">Ver estado</a>
+            <a class="btn btn-sm btn-primary" href="{% url 'entrega:reporte' nombre %}">Registrar entrega</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted m-0">No hay coincidencias.</p>
   {% endif %}
-</div>
+{% endif %}
 {% endblock %}

@@ -1,14 +1,19 @@
+{# templates/recepcion/detalle.html #}
 {% extends "base.html" %}
-{% block title %}Detalle Equipo{% endblock %}
+{% block title %}Detalle equipo · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Detalle{% endblock %}
 {% block content %}
-<div class="container mt-4">
-  {% if equipo %}
-    <h2>Detalle del Equipo</h2>
-    <p><strong>Cliente:</strong> {{ equipo.nombre }}</p>
-    <p><strong>Tipo de Equipo:</strong> {{ equipo.tipo_equipo }}</p>
-    <p><strong>Problema:</strong> {{ equipo.problema }}</p>
-  {% else %}
-    <p class="text-danger">No se encontró el equipo.</p>
-  {% endif %}
-</div>
+{% if equipo %}
+  <dl class="row">
+    <dt class="col-sm-3">Estudiante</dt><dd class="col-sm-9">{{ equipo.nombre }}</dd>
+    <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">{{ equipo.tipo_equipo }}</dd>
+    <dt class="col-sm-3">Problema</dt><dd class="col-sm-9">{{ equipo.problema }}</dd>
+  </dl>
+  <div class="d-flex gap-2 justify-content-end">
+    <a class="btn btn-outline-secondary" href="{% url 'recepcion:listado' %}">Volver</a>
+    <a class="btn btn-primary" href="{% url 'diagnostico:asignar' %}">Asignar a diagnóstico</a>
+  </div>
+{% else %}
+  <p class="text-muted m-0">No se encontró el equipo.</p>
+{% endif %}
 {% endblock %}

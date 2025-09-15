@@ -1,53 +1,45 @@
+{# templates/diagnostico/evaluar.html #}
 {% extends "base.html" %}
-{% block title %}Evaluar Equipo{% endblock %}
-
+{% block title %}Evaluar diagnóstico · Clínica PC{% endblock %}
+{% block page_title %}Diagnóstico · Evaluar{% endblock %}
 {% block content %}
-<div class="container mt-4" style="max-width:600px">
-  <h2>Evaluar Equipo</h2>
-  <form method="post">
-    {% csrf_token %}
-
-    <div class="mb-3">
-  <label class="form-label">Estudiante</label>
-  <select name="estudiante" class="form-control" required>
-    <option value="" disabled selected>-- Selecciona un estudiante --</option>
-    {% for a in asignaciones %}
-    <option value="{{ a.estudiante }}">{{ a.estudiante }}</option>
-    {% endfor %}
-  </select>
-</div>
-
-<div class="mb-3">
-  <label class="form-label">Equipo</label>
-  <select name="equipo" class="form-control" required>
-    <option value="" disabled selected>-- Selecciona un equipo --</option>
-    {% for a in asignaciones %}
-      <option value="{{ a.equipo.nombre }} - {{ a.equipo.tipo_equipo }}">
-        {{ a.equipo.nombre }} - {{ a.equipo.tipo_equipo }}
-      </option>
-    {% endfor %}
-  </select>
-</div>
-
-    <div class="mb-3">
-      <label class="form-label">Diagnóstico</label>
-      <textarea name="diagnostico" class="form-control" required></textarea>
+<form method="post" class="row g-3">
+  {% csrf_token %}
+  <div class="col-md-6">
+    <label class="form-label">Estudiante</label>
+    <select name="estudiante" class="form-select" required>
+      <option value="" selected disabled>Selecciona…</option>
+      {% for a in asignaciones %}
+        <option value="{{ a.estudiante }}">{{ a.estudiante }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Equipo</label>
+    <input class="form-control" name="equipo" placeholder="Ej. Notebook Acer" required>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Diagnóstico</label>
+    <textarea class="form-control" name="diagnostico" rows="3" required></textarea>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Solución propuesta</label>
+    <textarea class="form-control" name="solucion" rows="3" required></textarea>
+  </div>
+  <div class="col-12">
+    <label class="form-label d-block mb-2">Tipo de solución</label>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="tipo_solucion" id="t1" value="correctiva" required>
+      <label class="form-check-label" for="t1">Correctiva</label>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Solución</label>
-      <textarea name="solucion" class="form-control" required></textarea>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="tipo_solucion" id="t2" value="preventiva">
+      <label class="form-check-label" for="t2">Preventiva</label>
     </div>
-
-    <div class="mb-3">
-      <label class="form-label">Tipo de Solución</label>
-      <select name="tipo_solucion" class="form-control" required>
-        <option value="Correctiva">Correctiva</option>
-        <option value="Preventiva">Preventiva</option>
-      </select>
-    </div>
-
-    <button class="btn btn-success">Guardar Diagnóstico</button>
-  </form>
-</div>
+  </div>
+  <div class="col-12 d-flex justify-content-end gap-2">
+    <a href="{% url 'diagnostico:listado' %}" class="btn btn-outline-secondary">Ver listado</a>
+    <button class="btn btn-primary">Guardar evaluación</button>
+  </div>
+</form>
 {% endblock %}

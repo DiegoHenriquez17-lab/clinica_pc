@@ -1,19 +1,35 @@
 {% extends "base.html" %}
+{% block title %}Comprobante de entrega · Clínica PC{% endblock %}
+{% block page_title %}Entrega · Comprobante{% endblock %}
+
+{% block page_actions %}
+  <button class="btn btn-outline-secondary d-print-none" onclick="window.print()">
+    🖨️ Imprimir / Guardar PDF
+  </button>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Comprobante de Entrega</h2>
-
-  {% if equipo %}
-    <p><b>Cliente:</b> {{ equipo.estudiante }}</p>
-    <p><b>Diagnóstico:</b> {{ equipo.diagnostico }}</p>
-    <p><b>Solución:</b> {{ equipo.solucion }}</p>
-  {% endif %}
-
-  {% if entrega %}
-    <p><b>Estado final:</b> {{ entrega.estado }}</p>
-    <p><b>Observaciones:</b> {{ entrega.observaciones }}</p>
-  {% endif %}
-
-  <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Volver al Panel</a>
-</div>
+{% if equipo and entrega %}
+  <div class="row g-4">
+    <div class="col-md-6">
+      <h6 class="text-uppercase text-muted">Equipo</h6>
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Estudiante:</strong> {{ equipo.estudiante }}</li>
+        <li class="list-group-item"><strong>Equipo:</strong> {{ equipo.equipo }}</li>
+        <li class="list-group-item"><strong>Diagnóstico:</strong> {{ equipo.diagnostico }}</li>
+        <li class="list-group-item"><strong>Tipo:</strong> {{ equipo.tipo_solucion|capfirst }}</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h6 class="text-uppercase text-muted">Entrega</h6>
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Estado:</strong> {{ entrega.estado|capfirst }}</li>
+        <li class="list-group-item"><strong>Observaciones:</strong> {{ entrega.observaciones|default:"—" }}</li>
+        <li class="list-group-item"><strong>Fecha:</strong> {{ now|date:"d/m/Y H:i" }}</li>
+      </ul>
+    </div>
+  </div>
+{% else %}
+  <p class="text-muted m-0">Falta información para generar el comprobante.</p>
+{% endif %}
 {% endblock %}

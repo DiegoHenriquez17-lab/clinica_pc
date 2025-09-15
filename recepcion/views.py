@@ -2,9 +2,9 @@
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from login_app.decorators import session_required   # 👈 usamos sesión manual
+from login_app.decorators import login_required_simulado
 
-# Lista global de equipos registrados
+# Lista global en memoria (sin BD)
 equipos_registrados = []
 
 # Lista fija de estudiantes
@@ -29,6 +29,7 @@ estudiantes = [
     "NICOLAS SEBASTIAN SÁEZ GÓMEZ",
     "ANASTASIA JASMÍN SILVA SOTO",
 ]
+
 # Lista fija de tipos de equipos
 tipos_equipos = [
     "Notebook",
@@ -39,12 +40,26 @@ tipos_equipos = [
     "Servidor",
 ]
 
-@session_required
-def registrar_equipo(request):
+@login_required_simulado
+def registrar(request):
+    """
+    Vista única para GET (mostrar formulario) y POST (registrar equipo).
+    """
     if request.method == "POST":
         nombre = request.POST.get("nombre")
         tipo_equipo = request.POST.get("tipo_equipo")
         problema = request.POST.get("problema")
+
+        # Validaciones simples (opcional)
+        if not nombre or not tipo_equipo or not problema:
+            messages.error(request, "Completa todos los campos.")
+            return render(request, "recepcion/registrar.html", {
+                "estudiantes": estudiantes,
+                "tipos_equipos": tipos_equipos,
+                "nombre": nombre,
+                "tipo_equipo": tipo_equipo,
+                "problema": problema,
+            })
 
         equipos_registrados.append({
             "nombre": nombre,
@@ -55,18 +70,22 @@ def registrar_equipo(request):
         messages.success(request, f"Equipo de {nombre} registrado con éxito.")
         return redirect("recepcion:listado")
 
+    # GET
     return render(request, "recepcion/registrar.html", {
         "estudiantes": estudiantes,
-        "tipos_equipos": tipos_equipos   # 👈 ahora enviamos la lista
+        "tipos_equipos": tipos_equipos
     })
 
 
-@session_required
-def listado_equipos(request):
+@login_required_simulado
+def listado(request):
     return render(request, "recepcion/listado.html", {"equipos": equipos_registrados})
 
 
-@session_required
-def detalle_equipo(request, nombre):
+@login_required_simulado
+def detalle(request, nombre):
     equipo = next((eq for eq in equipos_registrados if eq["nombre"] == nombre), None)
+    if not equipo:
+        messages.error(request, "No se encontró el equipo solicitado.")
+        return redirect("recepcion:listado")
     return render(request, "recepcion/detalle.html", {"equipo": equipo})

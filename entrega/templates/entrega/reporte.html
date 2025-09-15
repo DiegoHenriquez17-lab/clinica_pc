@@ -1,21 +1,50 @@
 {% extends "base.html" %}
+{% block title %}Reporte de entrega · Clínica PC{% endblock %}
+{% block page_title %}Entrega · Reporte{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Registrar estado final del equipo - {{ nombre }}</h2>
-  <form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label>Estado:</label>
-      <select name="estado" class="form-control" required>
-        <option value="Entregado">Entregado</option>
-        <option value="Pendiente">Pendiente</option>
-      </select>
+
+{# ——— Resumen del diagnóstico del cliente ——— #}
+{% if equipo %}
+  <div class="card mb-3 border-0 shadow-sm">
+    <div class="card-body">
+      <h6 class="text-muted text-uppercase mb-3">Resumen del equipo</h6>
+      <div class="row g-2">
+        <div class="col-md-6">
+          <div><strong>Estudiante:</strong> {{ equipo.estudiante }}</div>
+          {# ⚠️ No intentes acceder a equipo.tipo_equipo; esa clave no existe en diagnosticos #}
+          <div><strong>Equipo:</strong> {{ equipo.equipo|default:"Equipo" }}</div>
+        </div>
+        <div class="col-md-6">
+          <div><strong>Diagnóstico:</strong> {{ equipo.diagnostico }}</div>
+          <div><strong>Tipo solución:</strong> {{ equipo.tipo_solucion|capfirst }}</div>
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label>Observaciones:</label>
-      <textarea name="observaciones" class="form-control"></textarea>
-    </div>
-    <button class="btn btn-success" type="submit">Registrar Entrega</button>
-  </form>
-</div>
+  </div>
+{% endif %}
+
+{# ——— Formulario de entrega ——— #}
+<form method="post" class="row g-3">
+  {% csrf_token %}
+  <div class="col-12">
+    <label class="form-label">Estado</label>
+    <select class="form-select" name="estado" required>
+      <option value="" selected disabled>Selecciona…</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="entregado">Entregado</option>
+    </select>
+  </div>
+
+  <div class="col-12">
+    <label class="form-label">Observaciones</label>
+    <textarea class="form-control" name="observaciones" rows="3" placeholder="Notas de entrega (opcional)"></textarea>
+  </div>
+
+  <div class="col-12 d-flex justify-content-end gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'entrega:listado' %}">Volver</a>
+    <button class="btn btn-primary">Guardar</button>
+  </div>
+</form>
+
 {% endblock %}
