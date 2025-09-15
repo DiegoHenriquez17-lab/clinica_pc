@@ -6,18 +6,25 @@
 <form method="post" class="row g-3">
   {% csrf_token %}
   <div class="col-md-6">
-    <label class="form-label">Estudiante</label>
-    <select name="estudiante" class="form-select" required>
-      <option value="" selected disabled>Selecciona…</option>
-      {% for a in asignaciones %}
-        <option value="{{ a.estudiante }}">{{ a.estudiante }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-md-6">
-    <label class="form-label">Equipo</label>
-    <input class="form-control" name="equipo" placeholder="Ej. Notebook Acer" required>
-  </div>
+  <label class="form-label">Estudiante</label>
+  <select name="estudiante" class="form-select" required>
+    <option value="" selected disabled>Selecciona…</option>
+    {% for est in estudiantes %}
+      <option value="{{ est }}">{{ est }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="col-md-6">
+  <label class="form-label">Equipo</label>
+  <select name="equipo" class="form-select" required>
+    <option value="" selected disabled>Selecciona…</option>
+    {% for eq in equipos %}
+      <option value="{{ eq }}">{{ eq }}</option>
+    {% endfor %}
+  </select>
+</div>
+
   <div class="col-12">
     <label class="form-label">Diagnóstico</label>
     <textarea class="form-control" name="diagnostico" rows="3" required></textarea>

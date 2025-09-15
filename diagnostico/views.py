@@ -82,7 +82,7 @@ def evaluar(request):
     """
     Registrar diagnóstico de un equipo ya asignado.
     GET: muestra formulario.
-    POST: guarda diagnóstico (mutando la lista en sitio para no romper importaciones).
+    POST: guarda diagnóstico.
     """
     if request.method == "POST":
         estudiante = request.POST.get("estudiante")
@@ -98,25 +98,29 @@ def evaluar(request):
 
         now = timezone.localtime()
 
-        # ✅ Mutamos EN SITIO para mantener el mismo objeto 'diagnosticos'
+        # ✅ Reemplazar diagnóstico previo del mismo estudiante (si existe)
         diagnosticos[:] = [d for d in diagnosticos if d.get("estudiante") != estudiante]
 
         diagnosticos.append({
             "estudiante": estudiante,
-            "equipo": equipo_desc,                  # texto legible (ej: "Notebook de Juan")
+            "equipo": equipo_desc,
             "diagnostico": diagnostico_txt,
             "solucion": solucion,
-            "tipo_solucion": tipo_solucion,        # ej: "Software", "Hardware", etc.
-            "created_ts": now.timestamp(),         # para ordenar por fecha
-            "created_at": now.strftime("%d/%m/%Y %H:%M"),  # para mostrar en UI
+            "tipo_solucion": tipo_solucion,
+            "created_ts": now.timestamp(),
+            "created_at": now.strftime("%d/%m/%Y %H:%M"),
         })
 
         messages.success(request, f"Diagnóstico de {equipo_desc} registrado con éxito.")
         return redirect("diagnostico:listado")
 
-    # GET: pasamos asignaciones para facilitar selección en el formulario (opcional)
+    # 🔹 Construir listas únicas
+    estudiantes_unicos = sorted({a["estudiante"] for a in asignaciones})
+    equipos_unicos = sorted({f"{a['equipo']['tipo_equipo']} — {a['equipo']['nombre']}" for a in asignaciones})
+
     return render(request, "diagnostico/evaluar.html", {
-        "asignaciones": asignaciones
+        "estudiantes": estudiantes_unicos,
+        "equipos": equipos_unicos,
     })
 
 
