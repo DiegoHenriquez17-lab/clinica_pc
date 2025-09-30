@@ -5,6 +5,14 @@
 {% block content %}
 <form method="post" class="row g-3">
   {% csrf_token %}
+  {% if confirm_duplicate %}
+    <div class="col-12">
+      <div class="alert alert-warning">
+        <strong>Atención:</strong> Ya existe un registro para <strong>{{ nombre }}</strong>.
+        ¿Deseas agregar un nuevo ingreso para otra revisión del equipo?
+      </div>
+    </div>
+  {% endif %}
   <div class="col-md-6">
     <label class="form-label">Estudiante</label>
     <select name="nombre" class="form-select" required>
@@ -15,6 +23,10 @@
     </select>
   </div>
   <div class="col-md-6">
+    <label class="form-label">RUT</label>
+    <input type="text" name="rut" class="form-control" value="{{ rut|default:'' }}" placeholder="12.345.678-9">
+  </div>
+  <div class="col-md-6">
     <label class="form-label">Tipo de equipo</label>
     <select name="tipo_equipo" class="form-select" required>
       <option value="" selected disabled>Selecciona…</option>
@@ -23,13 +35,26 @@
       {% endfor %}
     </select>
   </div>
+  <div class="col-md-6">
+    <label class="form-label">Correo electrónico</label>
+    <input type="email" name="correo" class="form-control" value="{{ correo|default:'' }}" placeholder="usuario@dominio.cl">
+  </div>
   <div class="col-12">
     <label class="form-label">Descripción del problema</label>
     <textarea name="problema" class="form-control" rows="3" required>{{ problema }}</textarea>
   </div>
+  <div class="col-md-6">
+    <label class="form-label">Teléfono</label>
+    <input type="text" name="telefono" class="form-control" value="{{ telefono|default:'' }}" placeholder="+56 9 1234 5678">
+  </div>
   <div class="col-12 d-flex justify-content-end gap-2">
     <a class="btn btn-outline-secondary" href="{% url 'recepcion:listado' %}">Ver listado</a>
-    <button class="btn btn-primary">Registrar</button>
+    {% if confirm_duplicate %}
+      <input type="hidden" name="confirm_duplicate" value="1">
+      <button class="btn btn-primary">Confirmar y Registrar</button>
+    {% else %}
+      <button class="btn btn-primary">Registrar</button>
+    {% endif %}
   </div>
 </form>
 {% endblock %}

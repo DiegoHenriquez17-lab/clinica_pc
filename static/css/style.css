@@ -1,11 +1,44 @@
 
-.card { border-radius: 1rem; }
-.form-control, .form-select { border-radius: .6rem; }
-.table td, .table th { vertical-align: middle; }
+:root{
+  --pc-primary: #0d6efd; /* bootstrap primary */
+  --pc-accent: #0b5ed7;
+  --pc-bg: #f8fafc;
+  --pc-muted: #6c757d;
+  --pc-success: #198754;
+}
 
+html,body{height:100%;}
+body{font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:var(--pc-bg); color:#222}
 
-@media print {
+/* Cards and surfaces */
+.card{border-radius:0.75rem; box-shadow: 0 6px 18px rgba(20,30,50,0.06);}
+.card-body{padding:1.25rem}
+
+/* Forms */
+.form-control, .form-select{border-radius:0.5rem; border:1px solid rgba(20,30,50,0.08)}
+
+/* Tables */
+.table td, .table th{vertical-align:middle}
+
+/* Buttons */
+.btn-primary{background:linear-gradient(180deg,var(--pc-accent),var(--pc-primary)); border:0}
+.btn-outline-primary{color:var(--pc-primary); border-color:rgba(13,110,253,0.15)}
+
+/* Navbar */
+.navbar-brand img{height:28px}
+
+/* Footer */
+footer{background:transparent}
+
+/* Toasts */
+.toast-header{font-weight:600}
+
+/* Utilities */
+.text-muted small{opacity:0.9}
+
+@media print{
   nav, footer, .btn, .toast-container { display: none !important; }
   body { background: #fff !important; color: #000 !important; }
   .card, .card-body { border: none !important; box-shadow: none !important; }
 }
+

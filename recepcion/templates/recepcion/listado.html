@@ -7,17 +7,17 @@
   <div class="table-responsive">
     <table class="table table-hover align-middle">
       <thead class="table-light">
-        <tr><th>#</th><th>Estudiante</th><th>Tipo</th><th>Problema</th><th class="text-end">Acciones</th></tr>
+        <tr><th>#</th><th>Cliente</th><th>Tipo</th><th>Problema</th><th class="text-end">Acciones</th></tr>
       </thead>
       <tbody>
         {% for eq in equipos %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ eq.nombre }}</td>
+            <td>{% if eq.cliente %}{{ eq.cliente.nombre }}{% else %}{{ eq.nombre|default:'—' }}{% endif %}</td>
             <td>{{ eq.tipo_equipo }}</td>
-            <td class="text-truncate" style="max-width:380px">{{ eq.problema }}</td>
+            <td class="text-truncate" style="max-width:380px">{% if eq.problema %}{{ eq.problema }}{% else %}{{ eq.problema|default:'—' }}{% endif %}</td>
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'recepcion:detalle' eq.nombre %}">Detalle</a>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'recepcion:detalle' eq.cliente.nombre %}">Detalle</a>
             </td>
           </tr>
         {% endfor %}

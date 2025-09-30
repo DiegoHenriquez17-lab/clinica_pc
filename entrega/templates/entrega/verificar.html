@@ -5,17 +5,16 @@
 
   {% if equipo %}
     <div class="card mt-3 p-3">
-      <h4>
-        Equipo de: {{ equipo.estudiante }}
-      </h4>
+      <h4>Resumen del diagnóstico</h4>
+      <p><strong>Cliente (propietario):</strong> {{ equipo.cliente|default:equipo.estudiante }}</p>
+      <p><strong>Técnico / Estudiante que evaluó:</strong> {{ equipo.estudiante }}</p>
       <p><b>Diagnóstico:</b> {{ equipo.diagnostico }}</p>
       <p><b>Solución:</b> {{ equipo.solucion }}</p>
 
       {% if entrega %}
         <p><b>Estado final:</b> {{ entrega.estado }}</p>
         <p><b>Observaciones:</b> {{ entrega.observaciones }}</p>
-        <a href="{% url 'entrega:comprobante' equipo.estudiante %}" class="btn btn-secondary">Ver Comprobante</a>
-      {% else %}
+        <a href="{% url 'entrega:comprobante' equipo.cliente|default:equipo.estudiante %}" class="btn btn-secondary">Ver Comprobante</a>
       {% endif %}
     </div>
   {% endif %}

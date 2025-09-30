@@ -5,12 +5,19 @@
 {% block content %}
 <form method="post" class="row g-3">
   {% csrf_token %}
+  {% if confirm_multiple %}
+    <div class="col-12">
+      <div class="alert alert-warning">
+        <strong>Atención:</strong> {{ estudiante_sel }} ya tiene una asignación. ¿Deseas asignarle otra simultáneamente?
+      </div>
+    </div>
+  {% endif %}
   <div class="col-md-6">
     <label class="form-label">Estudiante</label>
     <select class="form-select" name="estudiante" required>
       <option value="" selected disabled>Selecciona…</option>
       {% for est in estudiantes %}
-        <option value="{{ est }}">{{ est }}</option>
+        <option value="{{ est }}" {% if estudiante_sel == est %}selected{% endif %}>{{ est }}</option>
       {% endfor %}
     </select>
   </div>
@@ -18,13 +25,20 @@
     <label class="form-label">Equipo registrado</label>
     <select class="form-select" name="equipo" required>
       <option value="" selected disabled>Selecciona…</option>
-      {% for idx, eq in equipos %}
-        <option value="{{ idx }}">{{ eq.tipo_equipo }} — {{ eq.nombre }}</option>
+      {% for idx, label, obj in equipos %}
+  <option value="{{ idx }}" {% if equipo_sel and equipo_sel == idx|stringformat:"s" %}selected{% endif %}>
+    {{ label }}
+  </option>
       {% endfor %}
     </select>
   </div>
   <div class="col-12 d-flex justify-content-end">
-    <button class="btn btn-primary">Asignar</button>
+    {% if confirm_multiple %}
+      <input type="hidden" name="confirm_multiple" value="1">
+      <button class="btn btn-primary">Confirmar y Asignar</button>
+    {% else %}
+      <button class="btn btn-primary">Asignar</button>
+    {% endif %}
   </div>
 </form>
 {% endblock %}

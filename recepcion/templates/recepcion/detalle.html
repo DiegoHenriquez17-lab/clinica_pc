@@ -5,9 +5,13 @@
 {% block content %}
 {% if equipo %}
   <dl class="row">
-    <dt class="col-sm-3">Estudiante</dt><dd class="col-sm-9">{{ equipo.nombre }}</dd>
+    <dt class="col-sm-3">Estudiante</dt><dd class="col-sm-9">{% if equipo.cliente %}{{ equipo.cliente.nombre }}{% else %}{{ equipo.nombre|default:'—' }}{% endif %}</dd>
     <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">{{ equipo.tipo_equipo }}</dd>
-    <dt class="col-sm-3">Problema</dt><dd class="col-sm-9">{{ equipo.problema }}</dd>
+    <dt class="col-sm-3">Problema</dt><dd class="col-sm-9">{{ equipo.problema|default:'—' }}</dd>
+    <dt class="col-sm-3">RUT</dt><dd class="col-sm-9">{% if equipo.cliente %}{{ equipo.cliente.rut|default:'—' }}{% else %}{{ equipo.rut|default:'—' }}{% endif %}</dd>
+    <dt class="col-sm-3">Correo</dt><dd class="col-sm-9">{% if equipo.cliente %}{{ equipo.cliente.correo|default:'—' }}{% else %}{{ equipo.correo|default:'—' }}{% endif %}</dd>
+    <dt class="col-sm-3">Teléfono</dt><dd class="col-sm-9">{% if equipo.cliente %}{{ equipo.cliente.telefono|default:'—' }}{% else %}{{ equipo.telefono|default:'—' }}{% endif %}</dd>
+    <dt class="col-sm-3">Serial</dt><dd class="col-sm-9">{{ equipo.serial|default:'—' }}</dd>
   </dl>
   <div class="d-flex gap-2 justify-content-end">
     <a class="btn btn-outline-secondary" href="{% url 'recepcion:listado' %}">Volver</a>

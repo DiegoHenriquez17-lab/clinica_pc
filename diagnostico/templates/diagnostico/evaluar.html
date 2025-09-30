@@ -5,25 +5,16 @@
 {% block content %}
 <form method="post" class="row g-3">
   {% csrf_token %}
+  
   <div class="col-md-6">
-  <label class="form-label">Estudiante</label>
-  <select name="estudiante" class="form-select" required>
-    <option value="" selected disabled>Selecciona…</option>
-    {% for est in estudiantes %}
-      <option value="{{ est }}">{{ est }}</option>
-    {% endfor %}
-  </select>
-</div>
+    <label class="form-label">Estudiante</label>
+    <input type="text" class="form-control" value="{{ asignacion.estudiante }}" readonly>
+  </div>
 
-<div class="col-md-6">
-  <label class="form-label">Equipo</label>
-  <select name="equipo" class="form-select" required>
-    <option value="" selected disabled>Selecciona…</option>
-    {% for eq in equipos %}
-      <option value="{{ eq }}">{{ eq }}</option>
-    {% endfor %}
-  </select>
-</div>
+  <div class="col-md-6">
+    <label class="form-label">Equipo</label>
+    <input type="text" class="form-control" value="{{ asignacion.equipo.tipo_equipo }} — {{ asignacion.equipo.nombre }}" readonly>
+  </div>
 
   <div class="col-12">
     <label class="form-label">Diagnóstico</label>
@@ -32,6 +23,10 @@
   <div class="col-12">
     <label class="form-label">Solución propuesta</label>
     <textarea class="form-control" name="solucion" rows="3" required></textarea>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Observaciones (opcional)</label>
+    <textarea class="form-control" name="observaciones" rows="2" placeholder="Notas adicionales, piezas necesarias, etc."></textarea>
   </div>
   <div class="col-12">
     <label class="form-label d-block mb-2">Tipo de solución</label>
@@ -44,6 +39,7 @@
       <label class="form-check-label" for="t2">Preventiva</label>
     </div>
   </div>
+
   <div class="col-12 d-flex justify-content-end gap-2">
     <a href="{% url 'diagnostico:listado' %}" class="btn btn-outline-secondary">Ver listado</a>
     <button class="btn btn-primary">Guardar evaluación</button>
