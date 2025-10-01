@@ -10,9 +10,12 @@ __pycache__/
 *.pyo
 
 # Django
+# Local SQLite DB should not be tracked; keep it local
 db.sqlite3
 *.sqlite3
 /local_settings.py
+/.env
+
 .env
 
 # Editor / OS
