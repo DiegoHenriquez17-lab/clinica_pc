@@ -19,8 +19,9 @@ except Exception:
 def _get_estudiantes_list():
     try:
         lista = list(Estudiante.objects.values_list('nombre', flat=True))
-        # if DB has rows, return them; otherwise fall back to hardcoded list
-        if lista:
+        # if DB has more than one row, return them; otherwise fall back to hardcoded list
+        # (this avoids using a single DB row and hides the full in-memory roster)
+        if lista and len(lista) > 1:
             return lista
     except Exception:
         pass
