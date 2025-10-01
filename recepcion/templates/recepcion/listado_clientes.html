@@ -1,0 +1,35 @@
+{# templates/recepcion/listado_clientes.html #}
+{% extends "base.html" %}
+{% block title %}Listado clientes · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Listado clientes{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'recepcion:crear_cliente' %}" class="btn btn-primary">Crear cliente</a>
+</div>
+{% if clientes %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr><th>#</th><th>Nombre</th><th>RUT</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for c in clientes %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ c.nombre }}</td>
+            <td>{{ c.rut|default:'—' }}</td>
+            <td>{{ c.correo|default:'—' }}</td>
+            <td>{{ c.telefono|default:'—' }}</td>
+            <td>
+              <a href="{% url 'recepcion:editar_cliente' c.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+              <a href="{% url 'recepcion:eliminar_cliente' c.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted m-0">No hay clientes registrados aún.</p>
+{% endif %}
+{% endblock %}

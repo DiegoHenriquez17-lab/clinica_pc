@@ -4,6 +4,9 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from login_app.decorators import login_required_simulado
 from .models import Cliente, Equipo, Estudiante
+from diagnostico.models import Diagnostico as DiagnosticoModel
+from diagnostico import views as diag_views
+from diagnostico.views import _get_estudiantes_list
 from django.db import IntegrityError
 
 # Lista global en memoria (sin BD) - se mantiene solo como fallback
@@ -176,10 +179,10 @@ def registrar(request):
 def listado(request):
     # Preferir datos en DB
     try:
-        equipos = Equipo.objects.select_related('cliente').all()
-        return render(request, "recepcion/listado.html", {"equipos": equipos})
+        diags = DiagnosticoModel.objects.select_related('cliente', 'estudiante', 'equipo').all()
+        return render(request, "recepcion/listado.html", {"diagnosticos": diags})
     except Exception:
-        return render(request, "recepcion/listado.html", {"equipos": equipos_registrados})
+        return render(request, "recepcion/listado.html", {"diagnosticos": getattr(diag_views, 'diagnosticos', [])})
 
 
 @login_required_simulado
@@ -199,3 +202,208 @@ def detalle(request, nombre):
             messages.error(request, "No se encontró el equipo solicitado.")
             return redirect("recepcion:listado")
         return render(request, "recepcion/detalle.html", {"equipo": equipo})
+
+
+@login_required_simulado
+def editar_equipo(request, pk):
+    """Editar un equipo existente."""
+    try:
+        equipo = Equipo.objects.select_related('cliente').get(pk=pk)
+    except Equipo.DoesNotExist:
+        messages.error(request, "Equipo no encontrado.")
+        return redirect("recepcion:listado")
+
+    if request.method == "POST":
+        tipo_equipo = request.POST.get("tipo_equipo")
+        problema = request.POST.get("problema")
+        serial = request.POST.get("serial")
+
+        if not tipo_equipo or not problema:
+            messages.error(request, "Completa todos los campos.")
+            return redirect("recepcion:editar_equipo", pk=pk)
+
+        equipo.tipo_equipo = tipo_equipo
+        equipo.problema = problema
+        equipo.serial = serial
+        equipo.save()
+
+        messages.success(request, "Equipo actualizado con éxito.")
+        return redirect("recepcion:listado")
+
+    return render(request, "recepcion/edit_equipo.html", {"equipo": equipo, "tipos_equipos": tipos_equipos})
+
+
+@login_required_simulado
+def eliminar_equipo(request, pk):
+    """Eliminar un equipo."""
+    try:
+        equipo = Equipo.objects.get(pk=pk)
+    except Equipo.DoesNotExist:
+        messages.error(request, "Equipo no encontrado.")
+        return redirect("recepcion:listado")
+
+    if request.method == "POST":
+        equipo.delete()
+        messages.success(request, "Equipo eliminado con éxito.")
+        return redirect("recepcion:listado")
+
+    return render(request, "recepcion/delete_equipo.html", {"equipo": equipo})
+
+
+# CRUD para Clientes
+
+@login_required_simulado
+def listado_clientes(request):
+    """Listado de clientes."""
+    try:
+        clientes = Cliente.objects.all()
+        return render(request, "recepcion/listado_clientes.html", {"clientes": clientes})
+    except Exception:
+        return render(request, "recepcion/listado_clientes.html", {"clientes": []})
+
+
+@login_required_simulado
+def crear_cliente(request):
+    """Crear un nuevo cliente."""
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        rut = request.POST.get("rut")
+        correo = request.POST.get("correo")
+        telefono = request.POST.get("telefono")
+
+        if not nombre:
+            messages.error(request, "El nombre es obligatorio.")
+            return redirect("recepcion:crear_cliente")
+
+        try:
+            Cliente.objects.create(nombre=nombre, rut=rut, correo=correo, telefono=telefono)
+            messages.success(request, "Cliente creado con éxito.")
+            return redirect("recepcion:listado_clientes")
+        except IntegrityError:
+            messages.error(request, "Error al crear el cliente.")
+            return redirect("recepcion:crear_cliente")
+
+    return render(request, "recepcion/crear_cliente.html")
+
+
+@login_required_simulado
+def editar_cliente(request, pk):
+    """Editar un cliente existente."""
+    try:
+        cliente = Cliente.objects.get(pk=pk)
+    except Cliente.DoesNotExist:
+        messages.error(request, "Cliente no encontrado.")
+        return redirect("recepcion:listado_clientes")
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        rut = request.POST.get("rut")
+        correo = request.POST.get("correo")
+        telefono = request.POST.get("telefono")
+
+        if not nombre:
+            messages.error(request, "El nombre es obligatorio.")
+            return redirect("recepcion:editar_cliente", pk=pk)
+
+        cliente.nombre = nombre
+        cliente.rut = rut
+        cliente.correo = correo
+        cliente.telefono = telefono
+        cliente.save()
+
+        messages.success(request, "Cliente actualizado con éxito.")
+        return redirect("recepcion:listado_clientes")
+
+    return render(request, "recepcion/editar_cliente.html", {"cliente": cliente})
+
+
+@login_required_simulado
+def eliminar_cliente(request, pk):
+    """Eliminar un cliente."""
+    try:
+        cliente = Cliente.objects.get(pk=pk)
+    except Cliente.DoesNotExist:
+        messages.error(request, "Cliente no encontrado.")
+        return redirect("recepcion:listado_clientes")
+
+    if request.method == "POST":
+        cliente.delete()
+        messages.success(request, "Cliente eliminado con éxito.")
+        return redirect("recepcion:listado_clientes")
+
+    return render(request, "recepcion/eliminar_cliente.html", {"cliente": cliente})
+
+
+# CRUD para Estudiantes
+
+@login_required_simulado
+def listado_estudiantes(request):
+    """Listado de estudiantes."""
+    estudiantes = _get_estudiantes_list()
+    return render(request, "recepcion/listado_estudiantes.html", {"estudiantes": estudiantes})
+
+
+@login_required_simulado
+def crear_estudiante(request):
+    """Crear un nuevo estudiante."""
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        email = request.POST.get("email")
+
+        if not nombre:
+            messages.error(request, "El nombre es obligatorio.")
+            return redirect("recepcion:crear_estudiante")
+
+        try:
+            Estudiante.objects.create(nombre=nombre, email=email)
+            messages.success(request, "Estudiante creado con éxito.")
+            return redirect("recepcion:listado_estudiantes")
+        except IntegrityError:
+            messages.error(request, "Error al crear el estudiante.")
+            return redirect("recepcion:crear_estudiante")
+
+    return render(request, "recepcion/crear_estudiante.html")
+
+
+@login_required_simulado
+def editar_estudiante(request, pk):
+    """Editar un estudiante existente."""
+    try:
+        estudiante = Estudiante.objects.get(pk=pk)
+    except Estudiante.DoesNotExist:
+        messages.error(request, "Estudiante no encontrado.")
+        return redirect("recepcion:listado_estudiantes")
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        email = request.POST.get("email")
+
+        if not nombre:
+            messages.error(request, "El nombre es obligatorio.")
+            return redirect("recepcion:editar_estudiante", pk=pk)
+
+        estudiante.nombre = nombre
+        estudiante.email = email
+        estudiante.save()
+
+        messages.success(request, "Estudiante actualizado con éxito.")
+        return redirect("recepcion:listado_estudiantes")
+
+    return render(request, "recepcion/editar_estudiante.html", {"estudiante": estudiante})
+
+
+@login_required_simulado
+def eliminar_estudiante(request, pk):
+    """Eliminar un estudiante."""
+    try:
+        estudiante = Estudiante.objects.get(pk=pk)
+    except Estudiante.DoesNotExist:
+        messages.error(request, "Estudiante no encontrado.")
+        return redirect("recepcion:listado_estudiantes")
+
+    if request.method == "POST":
+        estudiante.delete()
+        messages.success(request, "Estudiante eliminado con éxito.")
+        return redirect("recepcion:listado_estudiantes")
+
+    return render(request, "recepcion/eliminar_estudiante.html", {"estudiante": estudiante})

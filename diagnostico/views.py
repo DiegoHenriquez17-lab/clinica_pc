@@ -17,16 +17,7 @@ except Exception:
 
 # Lista de estudiantes disponibles (puede provenir de DB)
 def _get_estudiantes_list():
-    try:
-        lista = list(Estudiante.objects.values_list('nombre', flat=True))
-        # if DB has more than one row, return them; otherwise fall back to hardcoded list
-        # (this avoids using a single DB row and hides the full in-memory roster)
-        if lista and len(lista) > 1:
-            return lista
-    except Exception:
-        pass
-    # hardcode fallback
-    return [
+    hardcoded = [
             "IVY ANAYA PRADINES GUZMÁN",
             "MIGUEL ANGEL BARRIA MANSILLA",
             "DIEGO EDUARDO HENRIQUEZ GONZALEZ",
@@ -47,6 +38,13 @@ def _get_estudiantes_list():
             "NICOLAS SEBASTIAN SÁEZ GÓMEZ",
             "ANASTASIA JASMÍN SILVA SOTO",
         ]
+    try:
+        lista = list(Estudiante.objects.values_list('nombre', flat=True))
+        # Return union of DB students and hardcoded list, avoiding duplicates
+        combined = list(dict.fromkeys(lista + hardcoded))
+        return combined
+    except Exception:
+        return hardcoded
 
 
 @login_required_simulado
@@ -246,3 +244,51 @@ def listado(request):
         return render(request, "diagnostico/listado.html", {"diagnosticos": diags})
     except Exception:
         return render(request, "diagnostico/listado.html", {"diagnosticos": diagnosticos})
+
+
+@login_required_simulado
+def editar(request, pk):
+    """Editar un diagnóstico existente."""
+    try:
+        diag = DiagnosticoModel.objects.select_related('cliente', 'estudiante', 'equipo').get(pk=pk)
+    except DiagnosticoModel.DoesNotExist:
+        messages.error(request, "Diagnóstico no encontrado.")
+        return redirect("diagnostico:listado")
+
+    if request.method == "POST":
+        diagnostico_txt = request.POST.get("diagnostico")
+        solucion = request.POST.get("solucion")
+        tipo_solucion = request.POST.get("tipo_solucion")
+        observaciones = request.POST.get("observaciones", "")
+
+        if not (diagnostico_txt and solucion and tipo_solucion):
+            messages.error(request, "Debes completar todos los campos.")
+            return redirect("diagnostico:editar", pk=pk)
+
+        diag.diagnostico = diagnostico_txt
+        diag.solucion = solucion
+        diag.tipo_solucion = tipo_solucion
+        diag.observaciones = observaciones
+        diag.save()
+
+        messages.success(request, "Diagnóstico actualizado con éxito.")
+        return redirect("diagnostico:listado")
+
+    return render(request, "diagnostico/edit.html", {"diagnostico": diag})
+
+
+@login_required_simulado
+def eliminar(request, pk):
+    """Eliminar un diagnóstico."""
+    try:
+        diag = DiagnosticoModel.objects.get(pk=pk)
+    except DiagnosticoModel.DoesNotExist:
+        messages.error(request, "Diagnóstico no encontrado.")
+        return redirect("diagnostico:listado")
+
+    if request.method == "POST":
+        diag.delete()
+        messages.success(request, "Diagnóstico eliminado con éxito.")
+        return redirect("diagnostico:listado")
+
+    return render(request, "diagnostico/delete.html", {"diagnostico": diag})

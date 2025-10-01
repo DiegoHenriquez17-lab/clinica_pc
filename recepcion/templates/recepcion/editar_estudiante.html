@@ -1,0 +1,24 @@
+{# templates/recepcion/editar_estudiante.html #}
+{% extends "base.html" %}
+{% block title %}Editar estudiante · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Editar estudiante{% endblock %}
+{% block content %}
+<form method="post" class="row g-3">
+  {% csrf_token %}
+
+  <div class="col-md-6">
+    <label class="form-label">Nombre</label>
+    <input type="text" name="nombre" class="form-control" value="{{ estudiante.nombre }}" required>
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label">Email</label>
+    <input type="email" name="email" class="form-control" value="{{ estudiante.email }}" placeholder="usuario@dominio.cl">
+  </div>
+
+  <div class="col-12 d-flex justify-content-end gap-2">
+    <a href="{% url 'recepcion:listado_estudiantes' %}" class="btn btn-outline-secondary">Ver listado</a>
+    <button class="btn btn-primary">Actualizar estudiante</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,39 @@
+{# templates/recepcion/edit_equipo.html #}
+{% extends "base.html" %}
+{% block title %}Editar equipo · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Editar equipo{% endblock %}
+{% block content %}
+<form method="post" class="row g-3">
+  {% csrf_token %}
+
+  <div class="col-md-6">
+    <label class="form-label">Cliente</label>
+    <input type="text" class="form-control" value="{{ equipo.cliente.nombre }}" readonly>
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label">Tipo de equipo</label>
+    <select name="tipo_equipo" class="form-select" required>
+      <option value="" disabled>Selecciona…</option>
+      {% for t in tipos_equipos %}
+        <option value="{{ t }}" {% if equipo.tipo_equipo == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label">Serial</label>
+    <input type="text" name="serial" class="form-control" value="{{ equipo.serial }}" placeholder="NB-0001">
+  </div>
+
+  <div class="col-12">
+    <label class="form-label">Descripción del problema</label>
+    <textarea name="problema" class="form-control" rows="3" required>{{ equipo.problema }}</textarea>
+  </div>
+
+  <div class="col-12 d-flex justify-content-end gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'recepcion:listado' %}">Ver listado</a>
+    <button class="btn btn-primary">Actualizar</button>
+  </div>
+</form>
+{% endblock %}

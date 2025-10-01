@@ -1,0 +1,30 @@
+{# templates/recepcion/listado_estudiantes.html #}
+{% extends "base.html" %}
+{% block title %}Listado estudiantes · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Listado estudiantes{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'recepcion:crear_estudiante' %}" class="btn btn-primary">Crear estudiante</a>
+</div>
+{% if estudiantes %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr><th>#</th><th>Nombre</th><th>Email</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for e in estudiantes %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ e }}</td>
+            <td>—</td>
+            <td></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted m-0">No hay estudiantes registrados aún.</p>
+{% endif %}
+{% endblock %}

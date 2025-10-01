@@ -1,0 +1,16 @@
+{# templates/recepcion/eliminar_cliente.html #}
+{% extends "base.html" %}
+{% block title %}Eliminar cliente · Clínica PC{% endblock %}
+{% block page_title %}Recepción · Eliminar cliente{% endblock %}
+{% block content %}
+<div class="alert alert-warning" role="alert">
+  <h4 class="alert-heading">Confirmar eliminación</h4>
+  <p>¿Estás seguro que deseas eliminar el cliente <strong>{{ cliente.nombre }}</strong>?</p>
+  <hr>
+  <form method="post">
+    {% csrf_token %}
+    <a href="{% url 'recepcion:listado_clientes' %}" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+  </form>
+</div>
+{% endblock %}

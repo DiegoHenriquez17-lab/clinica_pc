@@ -1,0 +1,16 @@
+{# templates/diagnostico/delete.html #}
+{% extends "base.html" %}
+{% block title %}Eliminar diagnóstico · Clínica PC{% endblock %}
+{% block page_title %}Diagnóstico · Eliminar{% endblock %}
+{% block content %}
+<div class="alert alert-warning" role="alert">
+  <h4 class="alert-heading">Confirmar eliminación</h4>
+  <p>¿Estás seguro que deseas eliminar el diagnóstico para el equipo <strong>{{ diagnostico.equipo }}</strong> asignado a <strong>{{ diagnostico.estudiante.nombre }}</strong>?</p>
+  <hr>
+  <form method="post">
+    {% csrf_token %}
+    <a href="{% url 'diagnostico:listado' %}" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+  </form>
+</div>
+{% endblock %}
