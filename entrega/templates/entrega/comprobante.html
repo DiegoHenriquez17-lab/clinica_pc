@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tz %}
 {% block title %}Comprobante de entrega · Clínica PC{% endblock %}
 {% block page_title %}Entrega · Comprobante{% endblock %}
 
@@ -23,9 +24,25 @@
     <div class="col-md-6">
       <h6 class="text-uppercase text-muted">Entrega</h6>
       <ul class="list-group">
-        <li class="list-group-item"><strong>Estado:</strong> {{ entrega.estado|capfirst }}</li>
+        <li class="list-group-item"><strong>Estado:</strong>
+          {% if entrega.estado %}
+            {{ entrega.estado|capfirst }}
+          {% elif entrega.recibido_por %}
+            Entregado
+          {% else %}
+            —
+          {% endif %}
+        </li>
         <li class="list-group-item"><strong>Observaciones:</strong> {{ entrega.observaciones|default:"—" }}</li>
-        <li class="list-group-item"><strong>Fecha:</strong> {{ now|date:"d/m/Y H:i" }}</li>
+        <li class="list-group-item"><strong>Fecha:</strong>
+          {% if entrega.fecha_entrega %}
+            {{ entrega.fecha_entrega|localtime|date:"d/m/Y H:i" }}
+          {% elif entrega.created_at %}
+            {{ entrega.created_at }}
+          {% else %}
+            —
+          {% endif %}
+        </li>
       </ul>
     </div>
   </div>
