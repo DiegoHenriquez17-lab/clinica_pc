@@ -17,34 +17,37 @@ except Exception:
 
 # Lista de estudiantes disponibles (puede provenir de DB)
 def _get_estudiantes_list():
-    hardcoded = [
-            "IVY ANAYA PRADINES GUZMÁN",
-            "MIGUEL ANGEL BARRIA MANSILLA",
-            "DIEGO EDUARDO HENRIQUEZ GONZALEZ",
-            "DANILO ISMAEL CARRILLO MAYORGA",
-            "ARMANDO BENJAMÍN VARGAS MOHR",
-            "JAVIER EDUARDO ROJAS SALGADO",
-            "TOMÁS ANDRÉS VERA COÑUECAR",
-            "ROBINSON PATRICIO ORLANDO BARRIENTOS REYES",
-            "MATIAS ALEJANDRO NONQUE RUIZ",
-            "GABRIEL VICENTE RUIZ SCHWARZENBERG",
-            "CRISTAL ESTEFANÍA MANZANI RIVERA",
-            "JOAQUÍN MANUEL CUADRA MORALES",
-            "ANTONIO BENEDETTI MORALES",
-            "BENJAMÍN IGNACIO TORRES PÉREZ",
-            "JAVIER ANDRÉS CALBUANTE GONZÁLEZ",
-            "JAVIER ORLANDO CÁRDENAS TORRES",
-            "BASTIÁN FRANCISCO MONTECINOS CÁCERES",
-            "NICOLAS SEBASTIAN SÁEZ GÓMEZ",
-            "ANASTASIA JASMÍN SILVA SOTO",
-        ]
+    # Prefer the canonical hardcoded list defined in recepcion.views so the
+    # same fixed roster is used everywhere (UI + import command).
     try:
-        lista = list(Estudiante.objects.values_list('nombre', flat=True))
-        # Return union of DB students and hardcoded list, avoiding duplicates
-        combined = list(dict.fromkeys(lista + hardcoded))
-        return combined
+        est_fixed = getattr(recep_views, 'estudiantes', None)
+        if est_fixed:
+            return est_fixed
     except Exception:
-        return hardcoded
+        pass
+
+    # Fallback local copy (in case recepcion.views is unavailable)
+    return [
+        "IVY ANAYA PRADINES GUZMÁN",
+        "MIGUEL ANGEL BARRIA MANSILLA",
+        "DIEGO EDUARDO HENRIQUEZ GONZALEZ",
+        "DANILO ISMAEL CARRILLO MAYORGA",
+        "ARMANDO BENJAMÍN VARGAS MOHR",
+        "JAVIER EDUARDO ROJAS SALGADO",
+        "TOMÁS ANDRÉS VERA COÑUECAR",
+        "ROBINSON PATRICIO ORLANDO BARRIENTOS REYES",
+        "MATIAS ALEJANDRO NONQUE RUIZ",
+        "GABRIEL VICENTE RUIZ SCHWARZENBERG",
+        "CRISTAL ESTEFANÍA MANZANI RIVERA",
+        "JOAQUÍN MANUEL CUADRA MORALES",
+        "ANTONIO BENEDETTI MORALES",
+        "BENJAMÍN IGNACIO TORRES PÉREZ",
+        "JAVIER ANDRÉS CALBUANTE GONZÁLEZ",
+        "JAVIER ORLANDO CÁRDENAS TORRES",
+        "BASTIÁN FRANCISCO MONTECINOS CÁCERES",
+        "NICOLAS SEBASTIAN SÁEZ GÓMEZ",
+        "ANASTASIA JASMÍN SILVA SOTO",
+    ]
 
 
 @login_required_simulado
