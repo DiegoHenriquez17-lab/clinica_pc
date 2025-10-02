@@ -6,7 +6,6 @@ from login_app.decorators import login_required_simulado
 from .models import Cliente, Equipo, Estudiante
 from diagnostico.models import Diagnostico as DiagnosticoModel
 from diagnostico import views as diag_views
-from diagnostico.views import _get_estudiantes_list
 from django.db import IntegrityError
 
 # Lista global en memoria (sin BD) - se mantiene solo como fallback
@@ -48,6 +47,21 @@ tipos_equipos = [
     "Celular",
     "Servidor",
 ]
+
+
+def _get_estudiantes_list_local():
+    """Obtener lista de estudiantes: preferir DB, sino fallback a la lista fija.
+
+    Evitamos importar desde `diagnostico.views` para romper el ciclo de importación
+    y garantizar que la vista `recepcion` pueda funcionar independientemente.
+    """
+    try:
+        lista = list(Estudiante.objects.values_list('nombre', flat=True))
+        if lista:
+            return lista
+    except Exception:
+        pass
+    return estudiantes
 
 
 def _prefix_for_tipo(tipo: str) -> str:
@@ -339,8 +353,8 @@ def eliminar_cliente(request, pk):
 @login_required_simulado
 def listado_estudiantes(request):
     """Listado de estudiantes."""
-    estudiantes = _get_estudiantes_list()
-    return render(request, "recepcion/listado_estudiantes.html", {"estudiantes": estudiantes})
+    estudiantes_list = _get_estudiantes_list_local()
+    return render(request, "recepcion/listado_estudiantes.html", {"estudiantes": estudiantes_list})
 
 
 @login_required_simulado
