@@ -33,4 +33,26 @@
 {% else %}
   <p class="text-muted m-0">No hay diagnósticos registrados aún.</p>
 {% endif %}
+
+{% if estudiantes %}
+  <h3 class="mt-4">Estudiantes</h3>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr><th>#</th><th>Nombre</th><th>Email</th></tr>
+      </thead>
+      <tbody>
+        {% for e in estudiantes %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ e }}</td>
+            <td>—</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted m-0">No hay estudiantes registrados aún.</p>
+{% endif %}
 {% endblock %}
