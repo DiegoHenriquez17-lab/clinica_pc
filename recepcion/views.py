@@ -194,14 +194,9 @@ def listado(request):
     # Preferir datos en DB
     try:
         diags = DiagnosticoModel.objects.select_related('cliente', 'estudiante', 'equipo').all()
-        # also include estudiantes list so the page always shows current students
-        try:
-            estudiantes_list = _get_estudiantes_list_local()
-        except Exception:
-            estudiantes_list = []
-        return render(request, "recepcion/listado.html", {"diagnosticos": diags, "estudiantes": estudiantes_list})
+        return render(request, "recepcion/listado.html", {"diagnosticos": diags})
     except Exception:
-        return render(request, "recepcion/listado.html", {"diagnosticos": getattr(diag_views, 'diagnosticos', []), "estudiantes": getattr(diag_views, 'diagnosticos', [])})
+        return render(request, "recepcion/listado.html", {"diagnosticos": getattr(diag_views, 'diagnosticos', [])})
 
 
 @login_required_simulado
