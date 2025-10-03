@@ -8,6 +8,7 @@ class Cliente(models.Model):
 	correo = models.EmailField(blank=True, null=True)
 	ciudad = models.CharField(max_length=100, blank=True, null=True)
 	telefono = models.CharField(max_length=30, blank=True, null=True)
+	imagen_carnet = models.ImageField(upload_to='carnets/', blank=True, null=True, help_text="Imagen del carnet del cliente por seguridad")
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:

@@ -5,4 +5,5 @@ app_name = "recepcion"
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("cliente/<int:cliente_id>/", views.ver_cliente, name="ver_cliente"),
 ]

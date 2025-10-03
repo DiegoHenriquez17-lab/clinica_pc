@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -19,10 +19,12 @@ def index(request):
     hoy = timezone.now().date()
     ingresos_hoy = Equipo.objects.filter(created_at__date=hoy).count()
     ultimos_ingresos = Equipo.objects.select_related('cliente').order_by('-created_at')[:5]
+    clientes_recientes = Cliente.objects.order_by('-created_at')[:5]
     
     context = {
         'ingresos_hoy': ingresos_hoy,
         'ultimos_ingresos': ultimos_ingresos,
+        'clientes_recientes': clientes_recientes,
     }
     
     return render(request, 'recepcion/index.html', context)
@@ -37,6 +39,7 @@ def registrar_equipo(request):
         telefono = request.POST.get('telefono', '').strip()
         correo = request.POST.get('correo', '').strip()
         ciudad = request.POST.get('ciudad', '').strip()
+        imagen_carnet = request.FILES.get('imagen_carnet')
         
         # Datos del equipo
         tipo_equipo = request.POST.get('tipo_equipo', '').strip()
@@ -68,6 +71,7 @@ def registrar_equipo(request):
                 'telefono': telefono,
                 'correo': correo or None,
                 'ciudad': ciudad or None,
+                'imagen_carnet': imagen_carnet,
             }
         )
         
@@ -81,6 +85,8 @@ def registrar_equipo(request):
                 cliente.correo = correo
             if ciudad and cliente.ciudad != ciudad:
                 cliente.ciudad = ciudad
+            if imagen_carnet and not cliente.imagen_carnet:
+                cliente.imagen_carnet = imagen_carnet
             cliente.save()
         
         # Crear equipo
@@ -114,3 +120,17 @@ def registrar_equipo(request):
     except Exception as e:
         messages.error(request, f'Error al registrar el equipo: {str(e)}')
         return redirect('recepcion:index')
+
+
+@role_required('recepcion')
+def ver_cliente(request, cliente_id):
+    """Vista para mostrar información completa del cliente"""
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    equipos = cliente.equipos.all().order_by('-created_at')
+    
+    context = {
+        'cliente': cliente,
+        'equipos': equipos,
+    }
+    
+    return render(request, 'recepcion/ver_cliente.html', context)

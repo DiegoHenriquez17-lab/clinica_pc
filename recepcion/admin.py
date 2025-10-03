@@ -1,11 +1,25 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Cliente, Estudiante, Equipo, TrazaEquipo
 
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-	list_display = ("nombre", "rut", "correo", "ciudad", "telefono", "created_at")
+	list_display = ("nombre", "rut", "correo", "ciudad", "telefono", "tiene_carnet", "created_at")
 	search_fields = ("nombre", "rut", "correo", "ciudad")
+	readonly_fields = ("preview_carnet",)
+	
+	def tiene_carnet(self, obj):
+		if obj.imagen_carnet:
+			return format_html('<span style="color: green;">✓ Sí</span>')
+		return format_html('<span style="color: red;">✗ No</span>')
+	tiene_carnet.short_description = "Carnet"
+	
+	def preview_carnet(self, obj):
+		if obj.imagen_carnet:
+			return format_html('<img src="{}" width="200" height="auto" style="border-radius: 8px;" />', obj.imagen_carnet.url)
+		return "No hay imagen de carnet"
+	preview_carnet.short_description = "Vista previa del carnet"
 
 
 @admin.register(Estudiante)
