@@ -1,109 +1,171 @@
 {% load static %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Clínica PC{% endblock %}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/png">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Clínica PC - Sistema de Gestión Técnica{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    
+    <style>
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-recepcion { background-color: #dbeafe; color: #1e40af; }
+        .status-diagnostico { background-color: #fef3c7; color: #92400e; }
+        .status-hardware { background-color: #fce7f3; color: #9f1239; }
+        .status-software { background-color: #e0e7ff; color: #3730a3; }
+        .status-reparacion { background-color: #fed7aa; color: #9a3412; }
+        .status-despacho { background-color: #d1fae5; color: #065f46; }
+        .status-entregado { background-color: #d1d5db; color: #374151; }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-  <div class="container">
-    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'dashboard' %}">
-      <span>Clínica PC</span>
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link {% if request.path|slice:':10' == '/recepcion' %}active{% endif %}"
-             href="{% url 'recepcion:registrar' %}">Recepción</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if request.path|slice:':12' == '/diagnostico' %}active{% endif %}"
-             href="{% url 'diagnostico:asignar' %}">Diagnóstico</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if request.path|slice:':8' == '/entrega' %}active{% endif %}"
-             href="{% url 'entrega:listado' %}">Entrega</a>
-        </li>
-      </ul>
-      <div class="d-flex gap-2">
-        <!-- 👇 Antes decía "Dashboard", ahora es "Gestionar" -->
-        <a class="btn btn-outline-light btn-sm" href="{% url 'dashboard' %}">Gestionar</a>
-        <a class="btn btn-light btn-sm" href="{% url 'logout' %}">Salir</a>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<main class="container py-4">
-  {% if messages %}
-    <div aria-live="polite" aria-atomic="true"
-         class="position-fixed top-0 start-50 translate-middle-x p-3"
-         style="z-index:1080; min-width:320px; max-width:600px;">
-      <div class="toast-container">
-        {% for message in messages %}
-          {% with tag=message.tags %}
-          <div class="toast border-0 shadow w-100" role="alert" aria-live="assertive" aria-atomic="true"
-               data-bs-delay="3500" data-bs-autohide="true">
-            <div class="toast-header
-                        {% if 'success' in tag %}bg-success
-                        {% elif 'danger' in tag or 'error' in tag %}bg-danger
-                        {% elif 'warning' in tag %}bg-warning
-                        {% else %}bg-primary{% endif %}
-                        text-white">
-              <strong class="me-auto">
-                {% if 'success' in tag %}Éxito
-                {% elif 'danger' in tag or 'error' in tag %}Error
-                {% elif 'warning' in tag %}Aviso
-                {% else %}Mensaje{% endif %}
-              </strong>
-              <small>Ahora</small>
-              <button type="button" class="btn-close btn-close-white ms-2 mb-1"
-                      data-bs-dismiss="toast" aria-label="Close"></button>
+<body class="bg-gray-50">
+    {% block body_content %}
+    <!-- Main Application -->
+    <div id="mainApp">
+        <!-- Navigation Bar -->
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 flex items-center">
+                            <i class="fas fa-laptop-medical text-2xl text-blue-600 mr-3"></i>
+                            <span class="text-xl font-bold text-gray-800">Clínica PC</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">
+                            <i class="fas fa-user-circle mr-2"></i>
+                            <span id="currentUser">{{ user.username|capfirst }}</span>
+                        </span>
+                        <a href="{% url 'login_app:logout' %}" class="text-red-600 hover:text-red-800 font-medium">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="toast-body">{{ message }}</div>
-          </div>
-          {% endwith %}
-        {% endfor %}
-      </div>
+        </nav>
+
+        <!-- Sidebar and Content -->
+        <div class="flex h-[calc(100vh-4rem)]">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-white shadow-lg overflow-y-auto">
+                <nav class="p-4 space-y-2">
+                    <!-- Panel de Control - Siempre visible -->
+                    <a href="{% url 'dashboard' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'dashboard' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-chart-line w-6 mr-3 text-blue-600"></i>
+                        <span class="font-medium">Panel de Control</span>
+                    </a>
+                    
+                    <!-- Mostrar secciones según permisos del usuario -->
+                    {% if user.is_superuser or 'recepcion' in user.groups.all|join:',' %}
+                    <a href="{% url 'recepcion:index' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'recepcion' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-inbox w-6 mr-3 text-green-600"></i>
+                        <span class="font-medium">Recepción</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'diagnostico' in user.groups.all|join:',' %}
+                    <a href="{% url 'diagnostico:index' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'diagnostico' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-stethoscope w-6 mr-3 text-yellow-600"></i>
+                        <span class="font-medium">Diagnóstico</span>
+                    </a>
+                    
+                    <a href="{% url 'diagnostico:derivacion' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'derivacion' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-route w-6 mr-3 text-purple-600"></i>
+                        <span class="font-medium">Derivación</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'hardware' in user.groups.all|join:',' %}
+                    <a href="{% url 'diagnostico:hardware' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'hardware' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-microchip w-6 mr-3 text-red-600"></i>
+                        <span class="font-medium">Hardware</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'software' in user.groups.all|join:',' %}
+                    <a href="{% url 'diagnostico:software' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'software' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-code w-6 mr-3 text-indigo-600"></i>
+                        <span class="font-medium">Software</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'despacho' in user.groups.all|join:',' %}
+                    <a href="{% url 'entrega:index' %}" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition duration-200 flex items-center {% if 'entrega' in request.resolver_match.url_name %}bg-blue-50 text-blue-700{% endif %}">
+                        <i class="fas fa-shipping-fast w-6 mr-3 text-teal-600"></i>
+                        <span class="font-medium">Despacho</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} mb-4 p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% elif message.tags == 'error' or message.tags == 'danger' %}bg-red-50 border-red-200 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
     </div>
+    {% endblock %}
+
+    <!-- JavaScript -->
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".toast").forEach(function (el) {
-          new bootstrap.Toast(el).show();
-        });
-      });
+        // Función utilitaria para manejar AJAX con CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrftoken = getCookie('csrftoken');
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.remove();
+                }, 300);
+            });
+        }, 5000);
     </script>
-  {% endif %}
-
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <!-- 👇 Este bloque se usa en cada página para mostrar el título -->
-    <h1 class="h4 m-0">{% block page_title %}{% endblock %}</h1>
-    <div>{% block page_actions %}{% endblock %}</div>
-  </div>
-
-  <div class="card shadow-sm">
-    <div class="card-body">
-      {% block content %}{% endblock %}
-    </div>
-  </div>
-</main>
-
-<footer class="border-top py-3 bg-light">
-  <div class="container text-center text-muted small">
-    Hecho con <span style="color:#dc3545;">❤</span> por 
-    <strong>Diego Henríquez</strong> y <strong>Gabriel Ruiz</strong> · Inacap 2025
-  </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

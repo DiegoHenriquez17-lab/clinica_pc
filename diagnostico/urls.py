@@ -4,9 +4,9 @@ from . import views
 app_name = "diagnostico"
 
 urlpatterns = [
-    path("asignar/", views.asignar, name="asignar"),
-    path("evaluar/", views.evaluar, name="evaluar"),
-    path("listado/", views.listado, name="listado"),
-    path("editar/<int:pk>/", views.editar, name="editar"),
-    path("eliminar/<int:pk>/", views.eliminar, name="eliminar"),
+    path("", views.index, name="index"),
+    path("diagnosticar/<int:equipo_id>/", views.index, name="diagnosticar"),
+    path("derivacion/", views.derivacion, name="derivacion"),
+    path("hardware/", views.hardware, name="hardware"),
+    path("software/", views.software, name="software"),
 ]

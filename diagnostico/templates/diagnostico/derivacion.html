@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Derivación de Equipos - Clínica PC{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-3xl font-bold text-gray-800">Derivación de Equipos</h2>
+    <p class="text-gray-600 mt-1">Asignar equipos a áreas de trabajo</p>
+</div>
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800">Equipos Diagnosticados</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispositivo</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnóstico</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área Recomendada</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for diagnostico in diagnosticos_pendientes %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #{{ diagnostico.equipo.id }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ diagnostico.cliente.nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ diagnostico.equipo.tipo_equipo }}
+                            {% if diagnostico.equipo.marca %}
+                                <br><span class="text-gray-500">{{ diagnostico.equipo.marca }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ diagnostico.diagnostico|truncatewords:10 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if diagnostico.area_recomendada == 'hardware' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                <i class="fas {% if diagnostico.area_recomendada == 'hardware' %}fa-microchip{% else %}fa-code{% endif %} mr-1"></i>
+                                {{ diagnostico.get_area_recomendada_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if diagnostico.prioridad == 'urgente' %}bg-red-100 text-red-800
+                                {% elif diagnostico.prioridad == 'alta' %}bg-orange-100 text-orange-800
+                                {% elif diagnostico.prioridad == 'media' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ diagnostico.get_prioridad_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <form method="post" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="diagnostico_id" value="{{ diagnostico.id }}">
+                                <button type="submit" class="text-purple-600 hover:text-purple-900">
+                                    <i class="fas fa-route mr-1"></i>Derivar a {{ diagnostico.get_area_recomendada_display }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-clipboard-list text-4xl mb-2"></i>
+                            <p>No hay equipos pendientes de derivación</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

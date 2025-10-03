@@ -16,9 +16,14 @@ Including another URLconf
 """
 from django.urls import path, include
 from django.contrib import admin
+from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('dashboard/', login_required(views.DashboardView.as_view()), name='dashboard'),
+    path('boleta/<int:equipo_id>/', views.generar_boleta, name='generar_boleta'),
     path("recepcion/", include("recepcion.urls")),
     path("diagnostico/", include("diagnostico.urls")),
     path("entrega/", include("entrega.urls")),
