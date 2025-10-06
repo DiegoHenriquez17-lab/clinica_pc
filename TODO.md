@@ -1,24 +1,16 @@
-# TODO: Implement Transfer Observation Feature
+# TODO: Add JavaScript Validations and Real-Time Alerts for Client Data Forms
 
-## Completed Tasks
-- [x] Update hardware.html template to include transfer panel with observation field
-- [x] Update hardware.html template to modify transfer button to use JavaScript
-- [x] Update hardware.html template to add JavaScript functions for transfer panel
-- [x] Update software.html template to include transfer panel with observation field
-- [x] Update software.html template to modify transfer button to use JavaScript
-- [x] Update software.html template to add JavaScript functions for transfer panel
-- [x] Update send_hardware_to_software view to handle observation input
-- [x] Update send_software_to_hardware view to handle observation input
-- [x] Test the transfer functionality - Django server started successfully
-
-## Remaining Tasks
-- [ ] Verify that observations are properly saved in TrazaEquipo
-- [ ] Verify that observations are properly saved in TrazaEquipo
-- [ ] Ensure proper validation and error handling
-- [ ] Test edge cases (empty observations, long observations, etc.)
+## Tasks
+- [ ] Add validation functions for RUT, phone, email, name in recepcion/templates/recepcion/index.html
+- [ ] Implement real-time alerts (error messages below fields on input/blur)
+- [ ] Add CSS styling for error states
+- [ ] Prevent form submission if validations fail
+- [ ] Test validations with sample data
+- [ ] Optionally add to editar_cliente.html if needed
 
 ## Notes
-- The transfer buttons now open a modal-like panel instead of directly submitting
-- Observations are required fields for transfers
-- Observations are stored in the TrazaEquipo model as part of the description
-- Both hardware-to-software and software-to-hardware transfers are updated
+- RUT: Chilean format with checksum validation
+- Phone: 9 digits starting with 9
+- Email: Standard regex
+- Name: Not empty, min 3 characters
+- Use Bootstrap alert classes for styling

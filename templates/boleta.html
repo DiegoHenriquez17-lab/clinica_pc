@@ -26,7 +26,7 @@
     </div>
 
     <!-- Información del Cliente -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
             <h3 class="text-base font-bold text-gray-800 mb-2">DATOS DEL CLIENTE</h3>
             <div class="space-y-1 text-xs">
@@ -60,9 +60,18 @@
                 <p><strong>Estado:</strong> {{ equipo.get_estado_display }}</p>
             </div>
         </div>
+
+        {% if equipo.cliente.imagen_carnet %}
+        <div>
+            <h3 class="text-base font-bold text-gray-800 mb-2">IMAGEN CARNET</h3>
+            <div class="text-center">
+                <img src="{{ equipo.cliente.imagen_carnet.url }}" alt="Carnet del cliente" style="width: 250px; height: auto; border: 1px solid #ccc;">
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    
+
 
     <!-- Problema Reportado -->
     <div class="mb-4">
@@ -274,6 +283,31 @@
 
     .grid.grid-cols-1.md\:grid-cols-2 > div:last-child {
         padding-right: 0 !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 {
+        display: table !important;
+        width: 100% !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 > div {
+        display: table-cell !important;
+        width: 33.33% !important;
+        vertical-align: top !important;
+        padding: 0 5px !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 > div:first-child {
+        padding-left: 0 !important;
+    }
+
+    .grid.grid-cols-1.md\:grid-cols-3 > div:last-child {
+        padding-right: 0 !important;
+    }
+
+    img {
+        width: 150px !important;
+        height: auto !important;
     }
 }
 </style>

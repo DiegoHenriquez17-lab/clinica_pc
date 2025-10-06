@@ -1,141 +1,100 @@
-#!/usr/bin/env python
-"""
-Script para configurar el sistema de roles y permisos de la clínica
-"""
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import User
 
-def create_roles():
-    """Crear grupos y asignar permisos"""
-    
-    # Crear grupos si no existen
-    groups_config = {
-        'administradores': {
-            'description': 'Acceso completo al sistema',
-            'permissions': 'all'
+def setup_roles():
+    # Crear grupos
+    grupos = {
+        'admin': {
+            'permisos': 'all',  # Acceso total
         },
         'recepcion': {
-            'description': 'Recepción y registro de equipos',
-            'permissions': ['recepcion']
+            'permisos': [
+                'add_cliente', 'change_cliente', 'view_cliente', 'delete_cliente',
+                'add_equipo', 'change_equipo', 'view_equipo', 'delete_equipo',
+                'view_dashboard',
+            ],
+        },
+        'tecnico': {
+            'permisos': [
+                'view_equipo', 'change_equipo',
+                'view_diagnostico', 'change_diagnostico',
+                'view_hardware', 'change_hardware',
+                'view_software', 'change_software',
+            ],
         },
         'diagnostico': {
-            'description': 'Diagnóstico y derivación de equipos',
-            'permissions': ['diagnostico']
+            'permisos': [
+                'view_diagnostico', 'change_diagnostico',
+                'view_derivacion', 'change_derivacion',
+            ],
         },
         'hardware': {
-            'description': 'Reparaciones de hardware',
-            'permissions': ['hardware']
+            'permisos': [
+                'view_hardware', 'change_hardware',
+            ],
         },
         'software': {
-            'description': 'Reparaciones de software',
-            'permissions': ['software']
+            'permisos': [
+                'view_software', 'change_software',
+            ],
         },
         'despacho': {
-            'description': 'Entrega de equipos',
-            'permissions': ['despacho']
-        }
+            'permisos': [
+                'view_despacho', 'change_despacho',
+            ],
+        },
     }
-    
-    print("Creando grupos...")
-    for group_name, config in groups_config.items():
-        group, created = Group.objects.get_or_create(name=group_name)
-        if created:
-            print(f"✓ Grupo '{group_name}' creado")
+
+    # Crear grupos y asignar permisos
+    for nombre_grupo, datos in grupos.items():
+        grupo, created = Group.objects.get_or_create(name=nombre_grupo)
+        if datos['permisos'] == 'all':
+            # Asignar todos los permisos
+            permisos = Permission.objects.all()
+            grupo.permissions.set(permisos)
         else:
-            print(f"- Grupo '{group_name}' ya existe")
-    
-    # Configurar usuarios
-    users_config = [
-        {
-            'username': 'admin',
-            'password': 'admin123',
-            'is_superuser': True,
-            'is_staff': True,
-            'groups': ['administradores']
-        },
-        {
-            'username': 'recepcion',
-            'password': 'recepcion123',
-            'is_staff': True,
-            'groups': ['recepcion']
-        },
-        {
-            'username': 'diagnostico',  
-            'password': 'diagnostico123',
-            'is_staff': True,
-            'groups': ['diagnostico']
-        },
-        {
-            'username': 'hardware',
-            'password': 'hardware123', 
-            'is_staff': True,
-            'groups': ['hardware']
-        },
-        {
-            'username': 'software',
-            'password': 'software123',
-            'is_staff': True, 
-            'groups': ['software']
-        },
-        {
-            'username': 'despacho',
-            'password': 'despacho123',
-            'is_staff': True,
-            'groups': ['despacho']
-        }
-    ]
-    
-    print("\nConfigurando usuarios...")
-    for user_config in users_config:
-        username = user_config['username']
-        
-        # Crear o actualizar usuario
-        user, created = User.objects.get_or_create(
-            username=username,
-            defaults={
-                'is_superuser': user_config.get('is_superuser', False),
-                'is_staff': user_config.get('is_staff', False),
-            }
-        )
-        
-        if created:
-            user.set_password(user_config['password'])
-            user.save()
-            print(f"✓ Usuario '{username}' creado")
-        else:
-            print(f"- Usuario '{username}' ya existe")
-        
-        # Asignar grupos
-        user.groups.clear()  # Limpiar grupos existentes
-        for group_name in user_config['groups']:
-            try:
-                group = Group.objects.get(name=group_name)
-                user.groups.add(group)
-                print(f"  → Asignado al grupo '{group_name}'")
-            except Group.DoesNotExist:
-                print(f"  ✗ Grupo '{group_name}' no existe")
-    
-    print("\n" + "="*50)
-    print("SISTEMA DE ROLES CONFIGURADO")
-    print("="*50)
-    print("\nCredenciales de acceso:")
-    print("-" * 30)
-    for user_config in users_config:
-        username = user_config['username']
-        password = user_config['password']
-        groups = ", ".join(user_config['groups'])
-        print(f"Usuario: {username}")
-        print(f"Contraseña: {password}")
-        print(f"Acceso: {groups}")
-        print("-" * 30)
-    
-    print("\nCada usuario solo verá las secciones de su rol:")
-    print("• admin: Todas las secciones")
-    print("• recepcion: Solo recepción de equipos")
-    print("• diagnostico: Solo diagnóstico y derivación")
-    print("• hardware: Solo reparaciones de hardware")
-    print("• software: Solo reparaciones de software")
-    print("• despacho: Solo entrega de equipos")
+            permisos = []
+            for codename in datos['permisos']:
+                try:
+                    permiso = Permission.objects.get(codename=codename)
+                    permisos.append(permiso)
+                except Permission.DoesNotExist:
+                    print(f"Permiso {codename} no encontrado.")
+            grupo.permissions.set(permisos)
+        grupo.save()
+        print(f"Grupo '{nombre_grupo}' configurado con permisos.")
+
+    # Opcional: asignar grupos a usuarios existentes para pruebas
+    admin_user = User.objects.filter(username='admin').first()
+    if admin_user:
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+        admin_user.groups.clear()
+        admin_group = Group.objects.get(name='admin')
+        admin_user.groups.add(admin_group)
+        print("Usuario admin configurado como superusuario y asignado al grupo admin.")
+
+    tecnico_user = User.objects.filter(username='tecnico').first()
+    if tecnico_user:
+        tecnico_user.is_staff = True
+        tecnico_user.is_superuser = False
+        tecnico_user.save()
+        tecnico_user.groups.clear()
+        tecnico_group = Group.objects.get(name='tecnico')
+        tecnico_user.groups.add(tecnico_group)
+        print("Usuario tecnico asignado al grupo tecnico.")
+
+    recepcion_user = User.objects.filter(username='recepcion').first()
+    if recepcion_user:
+        recepcion_user.is_staff = True
+        recepcion_user.is_superuser = False
+        recepcion_user.save()
+        recepcion_user.groups.clear()
+        recepcion_group = Group.objects.get(name='recepcion')
+        recepcion_user.groups.add(recepcion_group)
+        print("Usuario recepcion asignado al grupo recepcion.")
 
 if __name__ == '__main__':
-    create_roles()
+    setup_roles()

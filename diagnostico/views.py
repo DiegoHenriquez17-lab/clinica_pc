@@ -147,17 +147,47 @@ def hardware(request):
     """Vista de reparación de hardware"""
     if request.method == 'POST':
         return completar_hardware(request)
-    
+
+    # Obtener filtros
+    prioridad_filter = request.GET.get('prioridad', '')
+    orden_filter = request.GET.get('orden', 'prioridad')  # por defecto prioridad
+
     # Equipos en área de hardware
     reparaciones_hw = ReparacionHardware.objects.filter(
         completado=False,
         diagnostico__equipo__estado='hardware'
-    ).select_related('diagnostico__equipo', 'diagnostico__cliente').order_by('fecha_inicio')
-    
+    ).select_related('diagnostico__equipo', 'diagnostico__cliente')
+
+    # Aplicar filtro de prioridad si se especifica
+    if prioridad_filter:
+        reparaciones_hw = reparaciones_hw.filter(diagnostico__prioridad=prioridad_filter)
+
+    # Ordenar según filtro
+    if orden_filter == 'fecha_asc':
+        reparaciones_hw = reparaciones_hw.order_by('fecha_inicio')
+    elif orden_filter == 'fecha_desc':
+        reparaciones_hw = reparaciones_hw.order_by('-fecha_inicio')
+    else:  # prioridad
+        # Orden personalizado por prioridad: urgente > alta > media > baja
+        from django.db.models import Case, When, Value, IntegerField
+        prioridad_order = Case(
+            When(diagnostico__prioridad='urgente', then=Value(1)),
+            When(diagnostico__prioridad='alta', then=Value(2)),
+            When(diagnostico__prioridad='media', then=Value(3)),
+            When(diagnostico__prioridad='baja', then=Value(4)),
+            default=Value(5),
+            output_field=IntegerField(),
+        )
+        reparaciones_hw = reparaciones_hw.annotate(
+            prioridad_order=prioridad_order
+        ).order_by('prioridad_order', 'fecha_inicio')
+
     context = {
         'reparaciones_hw': reparaciones_hw,
+        'prioridad_filter': prioridad_filter,
+        'orden_filter': orden_filter,
     }
-    
+
     return render(request, 'diagnostico/hardware.html', context)
 
 
@@ -209,17 +239,47 @@ def software(request):
     """Vista de reparación de software"""
     if request.method == 'POST':
         return completar_software(request)
-    
+
+    # Obtener filtros
+    prioridad_filter = request.GET.get('prioridad', '')
+    orden_filter = request.GET.get('orden', 'fecha_asc')  # por defecto fecha asc
+
     # Equipos en área de software
     reparaciones_sw = ReparacionSoftware.objects.filter(
         completado=False,
         diagnostico__equipo__estado='software'
-    ).select_related('diagnostico__equipo', 'diagnostico__cliente').order_by('fecha_inicio')
-    
+    ).select_related('diagnostico__equipo', 'diagnostico__cliente')
+
+    # Aplicar filtro de prioridad si se especifica
+    if prioridad_filter:
+        reparaciones_sw = reparaciones_sw.filter(diagnostico__prioridad=prioridad_filter)
+
+    # Ordenar según filtro
+    if orden_filter == 'fecha_asc':
+        reparaciones_sw = reparaciones_sw.order_by('fecha_inicio')
+    elif orden_filter == 'fecha_desc':
+        reparaciones_sw = reparaciones_sw.order_by('-fecha_inicio')
+    else:  # prioridad
+        # Orden personalizado por prioridad: urgente > alta > media > baja
+        from django.db.models import Case, When, Value, IntegerField
+        prioridad_order = Case(
+            When(diagnostico__prioridad='urgente', then=Value(1)),
+            When(diagnostico__prioridad='alta', then=Value(2)),
+            When(diagnostico__prioridad='media', then=Value(3)),
+            When(diagnostico__prioridad='baja', then=Value(4)),
+            default=Value(5),
+            output_field=IntegerField(),
+        )
+        reparaciones_sw = reparaciones_sw.annotate(
+            prioridad_order=prioridad_order
+        ).order_by('prioridad_order', 'fecha_inicio')
+
     context = {
         'reparaciones_sw': reparaciones_sw,
+        'prioridad_filter': prioridad_filter,
+        'orden_filter': orden_filter,
     }
-    
+
     return render(request, 'diagnostico/software.html', context)
 
 

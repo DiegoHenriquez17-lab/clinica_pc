@@ -13,27 +13,30 @@
     <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-md p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-4">Nuevo Ingreso</h3>
-            <form method="post" enctype="multipart/form-data" class="space-y-4">
+            <form method="post" enctype="multipart/form-data" class="space-y-4" id="cliente-form" novalidate>
                 {% csrf_token %}
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Cliente *</label>
-                        <input type="text" name="nombre_cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <input type="text" name="nombre_cliente" id="nombre_cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <p class="text-red-600 text-xs mt-1 hidden" id="error-nombre_cliente"></p>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">RUT Cliente</label>
-                        <input type="text" name="rut_cliente" placeholder="12345678-9" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="text" name="rut_cliente" id="rut_cliente" placeholder="12345678-9" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-red-600 text-xs mt-1 hidden" id="error-rut_cliente"></p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
-                        <input type="tel" name="telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <input type="tel" name="telefono" id="telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <p class="text-red-600 text-xs mt-1 hidden" id="error-telefono"></p>
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
                         <input type="text" name="ciudad" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -42,7 +45,8 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" name="correo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="email" name="correo" id="correo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-red-600 text-xs mt-1 hidden" id="error-correo"></p>
                 </div>
 
                 <!-- Campo de imagen del carnet -->
@@ -279,6 +283,105 @@ document.getElementById('imagen_carnet').addEventListener('change', function(e) 
         reader.readAsDataURL(file);
     } else {
         preview.classList.add('hidden');
+    }
+});
+
+// Validaciones en tiempo real
+const form = document.getElementById('cliente-form');
+const fields = {
+    nombre_cliente: { required: true, minLength: 3 },
+    rut_cliente: { required: false, validate: validateRUT },
+    telefono: { required: true, validate: validatePhone },
+    correo: { required: false, validate: validateEmail }
+};
+
+function showError(fieldId, message) {
+    const errorElement = document.getElementById('error-' + fieldId);
+    errorElement.textContent = message;
+    errorElement.classList.remove('hidden');
+    document.getElementById(fieldId).classList.add('border-red-500');
+}
+
+function hideError(fieldId) {
+    const errorElement = document.getElementById('error-' + fieldId);
+    errorElement.classList.add('hidden');
+    document.getElementById(fieldId).classList.remove('border-red-500');
+}
+
+function validateRUT(rut) {
+    if (!rut) return true; // Optional field
+    rut = rut.replace(/\./g, '').replace(/-/g, '');
+    if (rut.length < 8 || rut.length > 9) return false;
+    const body = rut.slice(0, -1);
+    const dv = rut.slice(-1).toUpperCase();
+    let sum = 0;
+    let multiplier = 2;
+    for (let i = body.length - 1; i >= 0; i--) {
+        sum += parseInt(body[i]) * multiplier;
+        multiplier = multiplier === 7 ? 2 : multiplier + 1;
+    }
+    const expectedDv = 11 - (sum % 11);
+    const calculatedDv = expectedDv === 11 ? '0' : expectedDv === 10 ? 'K' : expectedDv.toString();
+    return dv === calculatedDv;
+}
+
+function validatePhone(phone) {
+    const cleanPhone = phone.replace(/\s/g, '');
+    return /^\d{9}$/.test(cleanPhone) && cleanPhone.startsWith('9');
+}
+
+function validateEmail(email) {
+    if (!email) return true; // Optional field
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validateField(fieldId) {
+    const field = document.getElementById(fieldId);
+    const value = field.value.trim();
+    const config = fields[fieldId];
+
+    if (config.required && !value) {
+        showError(fieldId, 'Este campo es obligatorio');
+        return false;
+    }
+
+    if (config.minLength && value.length < config.minLength) {
+        showError(fieldId, `Debe tener al menos ${config.minLength} caracteres`);
+        return false;
+    }
+
+    if (config.validate && !config.validate(value)) {
+        let message = '';
+        if (fieldId === 'rut_cliente') message = 'RUT inválido';
+        else if (fieldId === 'telefono') message = 'Teléfono debe ser 9 dígitos empezando con 9';
+        else if (fieldId === 'correo') message = 'Email inválido';
+        showError(fieldId, message);
+        return false;
+    }
+
+    hideError(fieldId);
+    return true;
+}
+
+// Event listeners
+Object.keys(fields).forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    field.addEventListener('input', () => validateField(fieldId));
+    field.addEventListener('blur', () => validateField(fieldId));
+});
+
+// Form submit validation
+form.addEventListener('submit', function(e) {
+    let isValid = true;
+    Object.keys(fields).forEach(fieldId => {
+        if (!validateField(fieldId)) {
+            isValid = false;
+        }
+    });
+    if (!isValid) {
+        e.preventDefault();
+        alert('Por favor, corrige los errores en el formulario antes de enviar.');
     }
 });
 </script>

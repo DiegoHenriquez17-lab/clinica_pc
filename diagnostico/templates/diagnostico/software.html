@@ -41,7 +41,29 @@
     <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800">Equipos en Software</h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">Equipos en Software</h3>
+                    <form method="get" class="flex space-x-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+                            <select name="prioridad" onchange="this.form.submit()" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Todas</option>
+                                <option value="urgente" {% if prioridad_filter == 'urgente' %}selected{% endif %}>Urgente</option>
+                                <option value="alta" {% if prioridad_filter == 'alta' %}selected{% endif %}>Alta</option>
+                                <option value="media" {% if prioridad_filter == 'media' %}selected{% endif %}>Media</option>
+                                <option value="baja" {% if prioridad_filter == 'baja' %}selected{% endif %}>Baja</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por Fecha</label>
+                            <select name="orden" onchange="this.form.submit()" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="fecha_asc" {% if orden_filter == 'fecha_asc' %}selected{% endif %}>Más Antigua</option>
+                                <option value="fecha_desc" {% if orden_filter == 'fecha_desc' %}selected{% endif %}>Más Nueva</option>
+                                <option value="prioridad" {% if orden_filter == 'prioridad' %}selected{% endif %}>Prioridad</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="divide-y divide-gray-200">
                 {% for reparacion in reparaciones_sw %}
