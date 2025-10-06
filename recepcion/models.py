@@ -92,6 +92,8 @@ class TrazaEquipo(models.Model):
 		('diagnostico', 'Enviado a diagnóstico'),
 		('hardware', 'Enviado a reparación hardware'),
 		('software', 'Enviado a reparación software'),
+		('hardware_to_software', 'Enviado de Hardware a Software'),
+		('software_to_hardware', 'Enviado de Software a Hardware'),
 		('despacho', 'Listo para despacho'),
 		('entregado', 'Equipo entregado'),
 		('observacion', 'Observación agregada'),

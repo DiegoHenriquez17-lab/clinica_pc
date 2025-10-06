@@ -48,11 +48,15 @@
                 <!-- Campo de imagen del carnet -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-id-card mr-1"></i>Imagen del Carnet 
+                        <i class="fas fa-id-card mr-1"></i>Imagen del Carnet
                         <span class="text-xs text-gray-500">(por seguridad)</span>
                     </label>
-                    <input type="file" name="imagen_carnet" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <input type="file" name="imagen_carnet" accept="image/*" id="imagen_carnet" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                     <p class="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF (máx. 5MB)</p>
+                    <img id="preview-carnet" class="hidden mt-2 max-w-xs max-h-32 border rounded object-contain" alt="Vista previa del carnet">
+                    <button type="button" id="camera-btn" class="mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-camera mr-2"></i>Tomar Foto con Cámara
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -203,4 +207,80 @@
         </div>
     </div>
 </div>
+
+<!-- Camera Modal -->
+<div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <h3 class="text-lg font-bold mb-4">Tomar Foto del Carnet</h3>
+        <video id="camera-video" autoplay class="w-full border rounded"></video>
+        <canvas id="camera-canvas" class="hidden"></canvas>
+        <div class="flex justify-between mt-4">
+            <button id="capture-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Capturar Foto</button>
+            <button id="close-modal" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('camera-btn').addEventListener('click', function() {
+    const modal = document.getElementById('camera-modal');
+    modal.classList.remove('hidden');
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            const video = document.getElementById('camera-video');
+            video.srcObject = stream;
+        })
+        .catch(function(err) {
+            alert('Error al acceder a la cámara: ' + err.message);
+        });
+});
+
+document.getElementById('capture-btn').addEventListener('click', function() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    canvas.toBlob(function(blob) {
+        const file = new File([blob], 'carnet.jpg', { type: 'image/jpeg' });
+        const input = document.getElementById('imagen_carnet');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        // Trigger change event to show preview
+        input.dispatchEvent(new Event('change'));
+        // Close modal
+        document.getElementById('camera-modal').classList.add('hidden');
+        // Stop stream
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }, 'image/jpeg');
+});
+
+document.getElementById('close-modal').addEventListener('click', function() {
+    document.getElementById('camera-modal').classList.add('hidden');
+    const video = document.getElementById('camera-video');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }
+});
+
+// Preview de imagen del carnet
+document.getElementById('imagen_carnet').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('preview-carnet');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.add('hidden');
+    }
+});
+</script>
+
 {% endblock %}
