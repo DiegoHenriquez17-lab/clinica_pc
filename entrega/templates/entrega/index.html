@@ -8,7 +8,37 @@
     <p class="text-gray-600 mt-1">Gestionar entregas de equipos</p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Panel izquierdo para envío urgente -->
+    <div id="sendBackPanel" class="hidden">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Enviar de Vuelta con Prioridad Urgente</h3>
+            <form id="sendBackForm" method="post" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" id="sendBackEquipoId" name="equipo_id">
+                <input type="hidden" id="sendBackAction" name="action">
+
+                <div id="sendBackEquipoInfo" class="p-4 bg-gray-50 rounded-lg mb-4">
+                    <!-- Info del equipo se carga dinámicamente -->
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Observación *</label>
+                    <textarea name="observacion" id="sendBackObservacion" rows="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Explique por qué se devuelve el equipo..." required></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Esta observación será registrada en el historial del equipo</p>
+                </div>
+
+                <button type="submit" id="sendBackButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Enviar
+                </button>
+
+                <button type="button" onclick="cancelarEnvio()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
@@ -55,9 +85,19 @@
                                 {% endif %}
                                 <p class="text-xs text-gray-500 mt-2">Listo desde: {{ equipo.updated_at|date:"d/m/Y H:i" }}</p>
                             </div>
-                            <button class="ml-4 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                <i class="fas fa-shipping-fast mr-2"></i>Entregar
-                            </button>
+                            <div class="flex flex-col space-y-2 ml-4">
+                                <button class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                    <i class="fas fa-shipping-fast mr-2"></i>Entregar
+                                </button>
+                                <div class="flex space-x-2">
+                                    <button type="button" onclick="mostrarFormularioEnvio({{ equipo.id }}, 'hardware')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition duration-200">
+                                        <i class="fas fa-microchip mr-1"></i>Hardware Urgente
+                                    </button>
+                                    <button type="button" onclick="mostrarFormularioEnvio({{ equipo.id }}, 'software')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition duration-200">
+                                        <i class="fas fa-code mr-1"></i>Software Urgente
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -126,7 +166,7 @@
 function seleccionarEquipo(id, cliente, tipo, telefono, diagnostico) {
     document.getElementById('dispatchFormContainer').classList.remove('hidden');
     document.getElementById('dispatchPlaceholder').classList.add('hidden');
-    
+
     document.getElementById('equipoId').value = id;
     document.getElementById('equipoInfo').innerHTML = `
         <h4 class="font-semibold text-gray-900">#${id} - ${cliente}</h4>
@@ -134,7 +174,7 @@ function seleccionarEquipo(id, cliente, tipo, telefono, diagnostico) {
         <p class="text-sm text-gray-600 mt-1"><strong>Teléfono:</strong> ${telefono}</p>
         <p class="text-sm text-gray-700 mt-2"><strong>Diagnóstico:</strong> ${diagnostico}</p>
     `;
-    
+
     // Pre-llenar el campo "Recibido Por" con el nombre del cliente
     document.querySelector('input[name="recibido_por"]').value = cliente;
 }
@@ -143,6 +183,53 @@ function cancelarEntrega() {
     document.getElementById('dispatchFormContainer').classList.add('hidden');
     document.getElementById('dispatchPlaceholder').classList.remove('hidden');
     document.querySelector('form').reset();
+}
+
+function mostrarFormularioEnvio(equipoId, action) {
+    // Ocultar otros paneles si están visibles
+    document.getElementById('dispatchFormContainer').classList.add('hidden');
+    document.getElementById('dispatchPlaceholder').classList.add('hidden');
+
+    // Mostrar el panel de envío
+    document.getElementById('sendBackPanel').classList.remove('hidden');
+
+    // Configurar el formulario
+    document.getElementById('sendBackEquipoId').value = equipoId;
+    document.getElementById('sendBackAction').value = action;
+
+    // Cambiar el texto del botón según la acción
+    const button = document.getElementById('sendBackButton');
+    if (action === 'hardware') {
+        button.innerHTML = '<i class="fas fa-microchip mr-2"></i>Enviar a Hardware (Urgente)';
+        button.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-200';
+    } else {
+        button.innerHTML = '<i class="fas fa-code mr-2"></i>Enviar a Software (Urgente)';
+        button.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200';
+    }
+
+    // Configurar la acción del formulario
+    const form = document.getElementById('sendBackForm');
+    if (action === 'hardware') {
+        form.action = '{% url "entrega:send_back_to_hardware" 0 %}'.replace('0', equipoId);
+    } else {
+        form.action = '{% url "entrega:send_back_to_software" 0 %}'.replace('0', equipoId);
+    }
+
+    // Limpiar el campo de observación
+    document.getElementById('sendBackObservacion').value = '';
+
+    // Cargar información del equipo (puedes obtener esto de los datos disponibles)
+    // Por simplicidad, mostramos un mensaje genérico
+    document.getElementById('sendBackEquipoInfo').innerHTML = `
+        <h4 class="font-semibold text-gray-900">Equipo #${equipoId}</h4>
+        <p class="text-sm text-gray-600">Enviando a ${action === 'hardware' ? 'Hardware' : 'Software'} con prioridad urgente</p>
+    `;
+}
+
+function cancelarEnvio() {
+    document.getElementById('sendBackPanel').classList.add('hidden');
+    document.getElementById('dispatchPlaceholder').classList.remove('hidden');
+    document.getElementById('sendBackForm').reset();
 }
 </script>
 {% endblock %}

@@ -264,3 +264,127 @@ def completar_software(request):
     except Exception as e:
         messages.error(request, f'Error al completar reparación: {str(e)}')
         return redirect('diagnostico:software')
+
+
+@role_required('hardware')
+def send_hardware_to_software(request, reparacion_id):
+    """Enviar datos de reparación hardware a software"""
+    try:
+        if request.method == 'POST':
+            observacion = request.POST.get('observacion', '').strip()
+
+            if not observacion:
+                messages.error(request, 'Debe proporcionar una observación para enviar el equipo a software.')
+                return redirect('diagnostico:hardware')
+
+        reparacion_hw = get_object_or_404(ReparacionHardware, id=reparacion_id)
+        diagnostico = reparacion_hw.diagnostico
+
+        # Buscar o crear reparación software para el mismo diagnóstico
+        reparacion_sw, created = ReparacionSoftware.objects.get_or_create(
+            diagnostico=diagnostico,
+            defaults={
+                'tecnico': request.user,
+                'trabajo_realizado': '',
+                'software_instalado': '',
+                'costo_final': None,
+                'completado': False,
+            }
+        )
+
+        # Si ya existía, resetear para que aparezca en software
+        if not created:
+            reparacion_sw.trabajo_realizado = ''
+            reparacion_sw.software_instalado = ''
+            reparacion_sw.costo_final = None
+            reparacion_sw.completado = False
+            reparacion_sw.fecha_completado = None
+
+        # Copiar datos relevantes de hardware a software (puede ajustarse según necesidad)
+        reparacion_sw.trabajo_realizado = reparacion_hw.trabajo_realizado
+        reparacion_sw.costo_final = reparacion_hw.costo_final
+        reparacion_sw.save()
+
+        # Actualizar estado del equipo a software
+        diagnostico.equipo.estado = 'software'
+        diagnostico.equipo.save()
+
+        # Crear traza con observación
+        descripcion = f'Equipo enviado de hardware a software'
+        if request.method == 'POST' and observacion:
+            descripcion += f'. Observación: {observacion}'
+
+        TrazaEquipo.objects.create(
+            equipo=diagnostico.equipo,
+            accion='hardware_to_software',
+            descripcion=descripcion,
+            usuario=request.user
+        )
+
+        messages.success(request, f'Equipo #{diagnostico.equipo.id} enviado de hardware a software')
+        return redirect('diagnostico:hardware')
+    except Exception as e:
+        messages.error(request, f'Error al enviar datos de hardware a software: {str(e)}')
+        return redirect('diagnostico:hardware')
+
+
+@role_required('software')
+def send_software_to_hardware(request, reparacion_id):
+    """Enviar datos de reparación software a hardware"""
+    try:
+        if request.method == 'POST':
+            observacion = request.POST.get('observacion', '').strip()
+
+            if not observacion:
+                messages.error(request, 'Debe proporcionar una observación para enviar el equipo a hardware.')
+                return redirect('diagnostico:software')
+
+        reparacion_sw = get_object_or_404(ReparacionSoftware, id=reparacion_id)
+        diagnostico = reparacion_sw.diagnostico
+
+        # Buscar o crear reparación hardware para el mismo diagnóstico
+        reparacion_hw, created = ReparacionHardware.objects.get_or_create(
+            diagnostico=diagnostico,
+            defaults={
+                'tecnico': request.user,
+                'trabajo_realizado': '',
+                'repuestos_utilizados': '',
+                'costo_final': None,
+                'completado': False,
+            }
+        )
+
+        # Si ya existía, resetear para que aparezca en hardware
+        if not created:
+            reparacion_hw.trabajo_realizado = ''
+            reparacion_hw.repuestos_utilizados = ''
+            reparacion_hw.costo_final = None
+            reparacion_hw.completado = False
+            reparacion_hw.fecha_completado = None
+
+        # Copiar datos relevantes de software a hardware (puede ajustarse según necesidad)
+        reparacion_hw.trabajo_realizado = reparacion_sw.trabajo_realizado
+        reparacion_hw.costo_final = reparacion_sw.costo_final
+        reparacion_hw.save()
+
+        # Actualizar estado del equipo a hardware
+        diagnostico.equipo.estado = 'hardware'
+        diagnostico.equipo.save()
+
+        # Crear traza con observación
+        descripcion = f'Equipo enviado de software a hardware'
+        if request.method == 'POST' and observacion:
+            descripcion += f'. Observación: {observacion}'
+
+        TrazaEquipo.objects.create(
+            equipo=diagnostico.equipo,
+            accion='software_to_hardware',
+            descripcion=descripcion,
+            usuario=request.user
+        )
+
+        messages.success(request, f'Equipo #{diagnostico.equipo.id} enviado de software a hardware')
+        return redirect('diagnostico:software')
+    except Exception as e:
+        messages.error(request, f'Error al enviar datos de software a hardware: {str(e)}')
+        return redirect('diagnostico:software')

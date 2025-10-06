@@ -26,6 +26,7 @@ class Diagnostico(models.Model):
 	area_recomendada = models.CharField(max_length=20, choices=AREA_CHOICES)
 	prioridad = models.CharField(max_length=20, choices=PRIORIDAD_CHOICES, default='media')
 	costo_estimado = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+	observacion_urgente = models.TextField(blank=True, null=True)
 	
 	# Campos de seguimiento
 	observaciones = models.TextField(blank=True)
