@@ -163,3 +163,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'   # 👈 así
+
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'clinica.pc.inacap@gmail.com'
+EMAIL_HOST_PASSWORD = 'xrmn kltj ffbd tirk'  # Contraseña de aplicación de Google
+DEFAULT_FROM_EMAIL = 'Clínica PC <clinica.pc.inacap@gmail.com>'

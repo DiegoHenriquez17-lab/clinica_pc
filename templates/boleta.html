@@ -19,11 +19,47 @@
         <hr class="my-2 mt-4">
     </div>
 
-    <div class="text-right mb-4">
+    {% if not is_pdf_mode %}
+    <div class="flex justify-between mb-4 print:hidden">
+        <div class="flex gap-2">
+            <!-- Botón para enviar por email -->
+            <button onclick="mostrarFormularioEmail()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                <i class="fas fa-envelope mr-1"></i>Enviar por Email
+            </button>
+        </div>
         <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
             <i class="fas fa-print mr-1"></i>Imprimir
         </button>
     </div>
+
+    <!-- Formulario de envío por email (oculto por defecto) -->
+    <div id="formularioEmail" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg print:hidden">
+        <h4 class="font-bold text-green-800 mb-2">📧 Enviar Boleta por Email</h4>
+        <form method="post" action="{% url 'recepcion:enviar_boleta_email' equipo.id %}">
+            {% csrf_token %}
+            <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                    <label for="email_cliente" class="block text-sm font-medium text-gray-700 mb-1">
+                        Email del cliente:
+                    </label>
+                    <input type="email" 
+                           id="email_cliente" 
+                           name="email_cliente" 
+                           value="{{ equipo.cliente.email|default:'' }}"
+                           placeholder="ejemplo@gmail.com"
+                           required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-paper-plane mr-1"></i>Enviar
+                </button>
+                <button type="button" onclick="ocultarFormularioEmail()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
 
     <!-- Información del Cliente -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -310,6 +346,42 @@
         height: auto !important;
     }
 }
+
+/* Estilos específicos para PDF (cuando se genera desde Python) */
+@media all {
+    /* Si se incluye una clase .pdf-mode, aplicar estilos similares a print */
+    body.pdf-mode nav,
+    body.pdf-mode aside,
+    body.pdf-mode button,
+    body.pdf-mode .print\:hidden,
+    body.pdf-mode #formularioEmail {
+        display: none !important;
+    }
+    
+    body.pdf-mode main {
+        position: static !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+    
+    body.pdf-mode .bg-white.rounded-xl {
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 20px !important;
+    }
+}
 </style>
+
+<script>
+function mostrarFormularioEmail() {
+    document.getElementById('formularioEmail').classList.remove('hidden');
+}
+
+function ocultarFormularioEmail() {
+    document.getElementById('formularioEmail').classList.add('hidden');
+}
+</script>
 
 {% endblock %}

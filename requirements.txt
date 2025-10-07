@@ -1,6 +1,13 @@
 asgiref==3.9.1
 Django==5.2.6
+pdfkit==1.0.0
 Pillow==11.3.0
+playwright==1.49.1
 psycopg2-binary==2.9.9
+reportlab==4.2.5
+selenium==4.27.1
 sqlparse==0.5.3
 tzdata==2025.2
+webdriver-manager==4.0.2
+weasyprint==63.1
+xhtml2pdf==0.2.16
