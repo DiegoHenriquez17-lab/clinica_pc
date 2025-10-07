@@ -41,8 +41,8 @@ python manage.py runserver
 | `admin` | `admin123` | Administrador completo |
 | `recepcion` | `admin123` | Recepción de equipos |
 | `diagnostico` | `admin123` | Diagnósticos |
-| `hardware` | `admin123` | Reparaciones hardware |
-| `software` | `admin123` | Reparaciones software |
+| `tecnico_hardware` | `admin123` | Reparaciones hardware |
+| `tecnico_software` | `admin123` | Reparaciones software |
 | `despacho` | `admin123` | Entrega de equipos |
 
 ## 🎯 Características Principales
