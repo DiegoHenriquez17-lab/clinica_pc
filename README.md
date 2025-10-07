@@ -39,11 +39,11 @@ python manage.py runserver
 | Usuario | Contraseña | Rol |
 |---------|------------|-----|
 | `admin` | `admin123` | Administrador completo |
-| `recepcion` | `recepcion123` | Recepción de equipos |
-| `diagnostico` | `diagnostico123` | Diagnósticos |
-| `hardware` | `hardware123` | Reparaciones hardware |
-| `software` | `software123` | Reparaciones software |
-| `despacho` | `despacho123` | Entrega de equipos |
+| `recepcion` | `admin123` | Recepción de equipos |
+| `diagnostico` | `admin123` | Diagnósticos |
+| `hardware` | `admin123` | Reparaciones hardware |
+| `software` | `admin123` | Reparaciones software |
+| `despacho` | `admin123` | Entrega de equipos |
 
 ## 🎯 Características Principales
 
