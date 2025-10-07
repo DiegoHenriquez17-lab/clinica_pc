@@ -15,33 +15,43 @@ venv\Scripts\activate
 # source venv/bin/activate
 
 # 3. INSTALAR DEPENDENCIAS
-pip install django==5.2.6
-pip install Pillow
+pip install -r requirements.txt
 
 # 4. CONFIGURAR BASE DE DATOS
+# El proyecto está configurado para usar Neon (PostgreSQL en la nube).
+# Si deseas usar SQLite local, cambia la configuración en gestion_clinica/settings.py
 python manage.py migrate
 
-# 5. CREAR SUPERUSUARIO (OPCIONAL)
-python manage.py createsuperuser
+# 5. CONFIGURAR USUARIOS Y ROLES DEL SISTEMA
+python manage.py setup_initial_data
 
-# 6. CONFIGURAR USUARIOS Y ROLES DEL SISTEMA
-python manage.py shell -c "exec(open('setup_roles_complete.py').read())"
-
-# 7. EJECUTAR SERVIDOR
+# 6. EJECUTAR SERVIDOR
 python manage.py runserver
 
 # ✅ LISTO! El proyecto estará en: http://127.0.0.1:8000/
 
 # 🔑 CREDENCIALES:
 # Admin: admin / admin123
-# Recepción: recepcion / recepcion123  
+# Recepción: recepcion / recepcion123
 # Diagnóstico: diagnostico / diagnostico123
-# Hardware: hardware / hardware123
-# Software: software / software123
-# Despacho: despacho / despacho123
+# Hardware: tecnico_hardware / admin123
+# Software: tecnico_software / admin123
+# Despacho: despacho / admin123
+
+# Usuarios adicionales:
+# - recepcionista / recepcion123
+# - diagnosticador / diagnostico123
+# - tecnico_hw / hardware123
+# - tecnico_sw / software123
+# - despachador / despacho123
+# - tecnico_completo / tecnico123
 
 # 📱 URLS PRINCIPALES:
 # - Inicio: http://127.0.0.1:8000/
 # - Dashboard: http://127.0.0.1:8000/dashboard/
 # - Recepción: http://127.0.0.1:8000/recepcion/
 # - Django Admin: http://127.0.0.1:8000/admin/
+
+# 🗄️ CONFIGURACIÓN DE BASE DE DATOS
+# El proyecto usa Neon PostgreSQL. Si necesitas cambiar la configuración,
+# edita DATABASES en gestion_clinica/settings.py
