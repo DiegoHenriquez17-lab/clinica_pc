@@ -60,84 +60,7 @@ class Command(BaseCommand):
                 user.groups.add(group)
             user.save()
 
-        # Configurar usuarios adicionales
-        usuarios_config = [
-            {
-                'username': 'recepcionista',
-                'password': 'recepcion123',
-                'email': 'recepcionista@clinicapc.com',
-                'grupos': ['recepcion'],
-                'es_staff': False,
-                'es_admin': False
-            },
-            {
-                'username': 'diagnosticador',
-                'password': 'diagnostico123',
-                'email': 'diagnostico@clinicapc.com',
-                'grupos': ['diagnostico'],
-                'es_staff': False,
-                'es_admin': False
-            },
-            {
-                'username': 'tecnico_hw',
-                'password': 'hardware123',
-                'email': 'hardware@clinicapc.com',
-                'grupos': ['hardware'],
-                'es_staff': False,
-                'es_admin': False
-            },
-            {
-                'username': 'tecnico_sw',
-                'password': 'software123',
-                'email': 'software@clinicapc.com',
-                'grupos': ['software'],
-                'es_staff': False,
-                'es_admin': False
-            },
-            {
-                'username': 'despachador',
-                'password': 'despacho123',
-                'email': 'despacho@clinicapc.com',
-                'grupos': ['despacho'],
-                'es_staff': False,
-                'es_admin': False
-            },
-            # Usuarios multi-rol para testing
-            {
-                'username': 'tecnico_completo',
-                'password': 'tecnico123',
-                'email': 'tecnico@clinicapc.com',
-                'grupos': ['diagnostico', 'hardware', 'software'],
-                'es_staff': False,
-                'es_admin': False
-            }
-        ]
 
-        self.stdout.write("\nConfigurando usuarios con roles...")
-        for user_config in usuarios_config:
-            username = user_config['username']
-
-            # Crear o actualizar usuario
-            user, created = User.objects.get_or_create(username=username)
-
-            if created:
-                user.set_password(user_config['password'])
-                self.stdout.write(f"✓ Usuario '{username}' creado")
-            else:
-                self.stdout.write(f"- Usuario '{username}' ya existe, actualizando roles...")
-
-            # Configurar propiedades del usuario
-            user.email = user_config['email']
-            user.is_staff = user_config['es_staff']
-            user.is_superuser = user_config['es_admin']
-            user.save()
-
-            # Limpiar grupos anteriores y asignar nuevos
-            user.groups.clear()
-            for grupo_nombre in user_config['grupos']:
-                grupo = Group.objects.get(name=grupo_nombre)
-                user.groups.add(grupo)
-                self.stdout.write(f"  - Agregado al grupo '{grupo_nombre}'")
 
         # Mantener usuarios originales pero actualizar el admin
         self.stdout.write("\nActualizando usuarios existentes...")
@@ -180,24 +103,19 @@ class Command(BaseCommand):
 
         self.stdout.write("\n👥 USUARIOS POR ROL:")
         self.stdout.write("   📥 RECEPCIÓN:")
-        self.stdout.write("   • recepcion / recepcion123")
-        self.stdout.write("   • recepcionista / recepcion123")
+        self.stdout.write("   • recepcion / admin123")
 
         self.stdout.write("\n   🔬 DIAGNÓSTICO:")
-        self.stdout.write("   • diagnosticador / diagnostico123")
+        self.stdout.write("   • diagnostico / admin123")
 
         self.stdout.write("\n   🔧 HARDWARE:")
-        self.stdout.write("   • tecnico_hw / hardware123")
+        self.stdout.write("   • tecnico_hardware / admin123")
 
         self.stdout.write("\n   💻 SOFTWARE:")
-        self.stdout.write("   • tecnico_sw / software123")
+        self.stdout.write("   • tecnico_software / admin123")
 
         self.stdout.write("\n   📦 DESPACHO:")
-        self.stdout.write("   • despachador / despacho123")
-
-        self.stdout.write("\n   🛠️ TÉCNICO COMPLETO (múltiples áreas):")
-        self.stdout.write("   • tecnico / tecnico123")
-        self.stdout.write("   • tecnico_completo / tecnico123")
+        self.stdout.write("   • despacho / admin123")
 
         self.stdout.write(f"\n{'='*50}")
         self.stdout.write("¡Sistema listo para usar!")

@@ -32,19 +32,11 @@ python manage.py runserver
 
 # 🔑 CREDENCIALES:
 # Admin: admin / admin123
-# Recepción: recepcion / recepcion123
-# Diagnóstico: diagnostico / diagnostico123
+# Recepción: recepcion / admin123
+# Diagnóstico: diagnostico / admin123
 # Hardware: tecnico_hardware / admin123
 # Software: tecnico_software / admin123
 # Despacho: despacho / admin123
-
-# Usuarios adicionales:
-# - recepcionista / recepcion123
-# - diagnosticador / diagnostico123
-# - tecnico_hw / hardware123
-# - tecnico_sw / software123
-# - despachador / despacho123
-# - tecnico_completo / tecnico123
 
 # 📱 URLS PRINCIPALES:
 # - Inicio: http://127.0.0.1:8000/
