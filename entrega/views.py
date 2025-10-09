@@ -10,21 +10,86 @@ from diagnostico.models import Diagnostico, ReparacionHardware, ReparacionSoftwa
 
 @role_required('despacho')
 def index(request):
-    """Vista principal de entrega"""
+    """Vista principal de entrega con filtros de fecha"""
     if request.method == 'POST':
         return registrar_entrega(request)
     
-    # Equipos listos para entrega
-    equipos_listos = Equipo.objects.filter(estado='despacho').select_related(
+    # Obtener parámetros de filtro desde la URL
+    fecha_desde = request.GET.get('fecha_desde', '')
+    fecha_hasta = request.GET.get('fecha_hasta', '')
+    ordenar_por = request.GET.get('ordenar', 'updated_at')
+    estado_filtro = request.GET.get('estado', 'despacho')  # Por defecto solo equipos listos
+    
+    # Query base - equipos listos para entrega
+    equipos_query = Equipo.objects.select_related(
         'cliente', 'diagnostico', 'diagnostico__reparacion_hardware', 'diagnostico__reparacion_software'
-    ).order_by('updated_at')
+    )
+    
+    # Filtro por estado (despacho por defecto, pero puede incluir entregados)
+    if estado_filtro == 'todos':
+        equipos_query = equipos_query.filter(estado__in=['despacho', 'entregado'])
+    elif estado_filtro:
+        equipos_query = equipos_query.filter(estado=estado_filtro)
+    
+    # Filtro por rango de fechas
+    if fecha_desde:
+        try:
+            fecha_desde_obj = timezone.datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+            equipos_query = equipos_query.filter(updated_at__date__gte=fecha_desde_obj)
+        except ValueError:
+            pass
+    
+    if fecha_hasta:
+        try:
+            fecha_hasta_obj = timezone.datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+            equipos_query = equipos_query.filter(updated_at__date__lte=fecha_hasta_obj)
+        except ValueError:
+            pass
+    
+    # Aplicar ordenamiento
+    if ordenar_por in ['updated_at', '-updated_at', 'created_at', '-created_at', 'cliente__nombre', '-cliente__nombre']:
+        equipos_query = equipos_query.order_by(ordenar_por)
+    else:
+        equipos_query = equipos_query.order_by('updated_at')
+    
+    equipos_listos = equipos_query
+    
+    # Estadísticas para el dashboard
+    total_listos = Equipo.objects.filter(estado='despacho').count()
+    entregados_hoy = Equipo.objects.filter(
+        estado='entregado', 
+        updated_at__date=timezone.now().date()
+    ).count()
     
     context = {
         'equipos_listos': equipos_listos,
+        'total_listos': total_listos,
+        'entregados_hoy': entregados_hoy,
+        'filtros': {
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'ordenar_actual': ordenar_por,
+            'estado_actual': estado_filtro,
+            'estados_disponibles': [
+                ('despacho', 'Solo listos para entrega'),
+                ('entregado', 'Solo entregados'),
+                ('todos', 'Listos + Entregados'),
+            ],
+            'ordenar_opciones': [
+                ('updated_at', 'Más reciente primero (última actualización)'),
+                ('-updated_at', 'Más antiguo primero (última actualización)'),
+                ('created_at', 'Más reciente primero (fecha ingreso)'),
+                ('-created_at', 'Más antiguo primero (fecha ingreso)'),
+                ('cliente__nombre', 'Cliente A-Z'),
+                ('-cliente__nombre', 'Cliente Z-A'),
+            ]
+        }
     }
     
     return render(request, 'entrega/index.html', context)
 
+
+# Función historial_entregas eliminada para la presentación
 
 def registrar_entrega(request):
     """Registrar la entrega de un equipo"""
@@ -51,9 +116,17 @@ def registrar_entrega(request):
             cliente_satisfecho=cliente_satisfecho
         )
         
-        # Actualizar estado del equipo
+        # Actualizar estado del equipo y registrar traza
         equipo.estado = 'entregado'
         equipo.save()
+        
+        # Registrar en la traza
+        TrazaEquipo.objects.create(
+            equipo=equipo,
+            usuario=request.user,
+            accion='entregado',
+            descripcion=f'Entregado a {recibido_por} (Doc: {documento_receptor})'
+        )
         
         messages.success(request, f'Equipo #{equipo.id} entregado exitosamente a {recibido_por}')
         return redirect('entrega:index')

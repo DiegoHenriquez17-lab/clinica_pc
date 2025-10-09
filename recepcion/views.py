@@ -448,3 +448,33 @@ def enviar_boleta_email(request, equipo_id):
             messages.error(request, f'Error al procesar la solicitud: {str(e)}')
     
     return redirect('generar_boleta', equipo_id=equipo_id)
+
+
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
+@login_required
+def detalle_equipo_ajax(request, equipo_id):
+    """Vista AJAX para obtener detalles completos de un equipo"""
+    try:
+        equipo = get_object_or_404(Equipo, id=equipo_id)
+        
+        # Obtener trazas del equipo
+        trazas = TrazaEquipo.objects.filter(equipo=equipo).order_by('-timestamp')
+        
+        # Renderizar template
+        html = render_to_string('recepcion/detalle_equipo_ajax.html', {
+            'equipo': equipo,
+            'trazas': trazas,
+        })
+        
+        return JsonResponse({
+            'success': True,
+            'html': html
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

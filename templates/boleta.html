@@ -26,10 +26,35 @@
             <button onclick="mostrarFormularioEmail()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
                 <i class="fas fa-envelope mr-1"></i>Enviar por Email
             </button>
+            
+            <!-- Botones de Administrador (Solo superusuarios) -->
+            {% if user.is_superuser %}
+                <div class="border-l border-gray-200 pl-2 ml-2 flex gap-2">
+                    <a href="{% url 'actualizar_equipo' equipo.id %}" 
+                       class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm"
+                       title="Actualizar información del equipo">
+                        <i class="fas fa-edit mr-1"></i>Actualizar
+                    </a>
+                    <a href="{% url 'eliminar_equipo' equipo.id %}" 
+                       class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                       title="Eliminar equipo permanentemente"
+                       onclick="return confirm('⚠️ ADVERTENCIA\n\n¿Estás seguro de que quieres eliminar este equipo?\n\nEsta acción eliminará PERMANENTEMENTE:\n- El equipo\n- Su diagnóstico\n- Su historial\n- Los datos del cliente\n\n¿Continuar?')">
+                        <i class="fas fa-trash mr-1"></i>Eliminar
+                    </a>
+                </div>
+            {% endif %}
         </div>
-        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
-            <i class="fas fa-print mr-1"></i>Imprimir
-        </button>
+        
+        <div class="flex gap-2 items-center">
+            {% if user.is_superuser %}
+                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">
+                    <i class="fas fa-crown mr-1"></i>ADMIN
+                </span>
+            {% endif %}
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                <i class="fas fa-print mr-1"></i>Imprimir
+            </button>
+        </div>
     </div>
 
     <!-- Formulario de envío por email (oculto por defecto) -->

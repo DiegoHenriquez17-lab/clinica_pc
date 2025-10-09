@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.db.models import Q
 from recepcion.models import Equipo, Cliente, TrazaEquipo
 from .models import Diagnostico, ReparacionHardware, ReparacionSoftware
 from login_app.permissions import role_required
@@ -10,15 +11,45 @@ from decimal import Decimal, InvalidOperation
 
 @role_required('diagnostico')
 def index(request):
-    """Vista principal de diagnóstico"""
+    """Vista principal de diagnóstico con filtros de búsqueda avanzada"""
     if request.method == 'POST':
         return crear_diagnostico(request)
     
+    # Obtener parámetros de filtro
+    ordenar_por = request.GET.get('orden', 'fecha_asc')
+    buscar = request.GET.get('buscar', '').strip()
+    
     # Equipos pendientes de diagnóstico
-    equipos_pendientes = Equipo.objects.filter(estado='recepcion').select_related('cliente').order_by('created_at')
+    equipos_query = Equipo.objects.filter(estado='recepcion').select_related('cliente')
+    
+    # Aplicar filtro de búsqueda
+    if buscar:
+        equipos_query = equipos_query.filter(
+            Q(id__icontains=buscar) |
+            Q(cliente__nombre__icontains=buscar) |
+            Q(cliente__rut__icontains=buscar) |
+            Q(tipo_equipo__icontains=buscar) |
+            Q(marca__icontains=buscar) |
+            Q(modelo__icontains=buscar) |
+            Q(serial__icontains=buscar) |
+            Q(problema__icontains=buscar) |
+            Q(relato_cliente__icontains=buscar)
+        )
+    
+    # Aplicar ordenamiento
+    if ordenar_por == 'fecha_desc':
+        equipos_query = equipos_query.order_by('-created_at')
+    elif ordenar_por == 'cliente':
+        equipos_query = equipos_query.order_by('cliente__nombre')
+    else:  # fecha_asc por defecto
+        equipos_query = equipos_query.order_by('created_at')
+    
+    equipos_pendientes = equipos_query
     
     context = {
         'equipos_pendientes': equipos_pendientes,
+        'orden_filter': ordenar_por,
+        'buscar_filter': buscar,
     }
     
     return render(request, 'diagnostico/index.html', context)
@@ -81,17 +112,48 @@ def crear_diagnostico(request):
 
 @role_required('diagnostico')
 def derivacion(request):
-    """Vista de derivación de equipos diagnosticados"""
+    """Vista de derivación de equipos diagnosticados con filtros de búsqueda"""
     if request.method == 'POST':
         return derivar_equipo(request)
     
+    # Obtener parámetros de filtro
+    buscar = request.GET.get('buscar', '').strip()
+    area_filter = request.GET.get('area', '')
+    prioridad_filter = request.GET.get('prioridad', '')
+    
     # Equipos con diagnóstico pendientes de derivación
-    diagnosticos_pendientes = Diagnostico.objects.filter(
+    diagnosticos_query = Diagnostico.objects.filter(
         equipo__estado='diagnostico'
-    ).select_related('equipo', 'cliente').order_by('created_at')
+    ).select_related('equipo', 'cliente')
+    
+    # Aplicar filtro de búsqueda
+    if buscar:
+        diagnosticos_query = diagnosticos_query.filter(
+            Q(equipo__id__icontains=buscar) |
+            Q(cliente__nombre__icontains=buscar) |
+            Q(cliente__rut__icontains=buscar) |
+            Q(equipo__tipo_equipo__icontains=buscar) |
+            Q(equipo__marca__icontains=buscar) |
+            Q(equipo__modelo__icontains=buscar) |
+            Q(equipo__serial__icontains=buscar) |
+            Q(diagnostico__icontains=buscar)
+        )
+    
+    # Filtro por área
+    if area_filter:
+        diagnosticos_query = diagnosticos_query.filter(area_recomendada=area_filter)
+    
+    # Filtro por prioridad
+    if prioridad_filter:
+        diagnosticos_query = diagnosticos_query.filter(prioridad=prioridad_filter)
+    
+    diagnosticos_pendientes = diagnosticos_query.order_by('created_at')
     
     context = {
         'diagnosticos_pendientes': diagnosticos_pendientes,
+        'buscar_filter': buscar,
+        'area_filter': area_filter,
+        'prioridad_filter': prioridad_filter,
     }
     
     return render(request, 'diagnostico/derivacion.html', context)

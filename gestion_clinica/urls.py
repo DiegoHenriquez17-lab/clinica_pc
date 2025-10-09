@@ -26,6 +26,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('dashboard/', login_required(views.DashboardView.as_view()), name='dashboard'),
     path('boleta/<int:equipo_id>/', views.generar_boleta, name='generar_boleta'),
+    
+    # URLs de administrador para gestión de equipos
+    path('admin/equipo/<int:equipo_id>/eliminar/', views.eliminar_equipo, name='eliminar_equipo'),
+    path('admin/equipo/<int:equipo_id>/actualizar/', views.actualizar_equipo, name='actualizar_equipo'),
+    
     path("recepcion/", include("recepcion.urls")),
     path("diagnostico/", include("diagnostico.urls")),
     path("entrega/", include("entrega.urls")),

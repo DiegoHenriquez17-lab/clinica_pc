@@ -11,21 +11,26 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6#wbqw$*tr*%!$#ow=1ny=u@zk7j*_$!j337$-&x2_u8gvl7+f'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-6#wbqw$*tr*%!$#ow=1ny=u@zk7j*_$!j337$-&x2_u8gvl7+f')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 
 # Application definition
@@ -99,19 +104,33 @@ WSGI_APPLICATION = 'gestion_clinica.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'neondb',
-        'USER': 'neondb_owner',
-        'PASSWORD': 'npg_sOVY35FJMXxL',
-        'HOST': 'ep-late-band-aci2kkoj-pooler.sa-east-1.aws.neon.tech',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
+# Configuración de base de datos
+# Para desarrollo local usa SQLite, para producción PostgreSQL
+import os
+
+if os.environ.get('USE_SQLITE', 'True') == 'True':
+    # SQLite para desarrollo local (más rápido y confiable)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    # PostgreSQL para producción
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'neondb',
+            'USER': 'neondb_owner',
+            'PASSWORD': 'npg_sOVY35FJMXxL',
+            'HOST': 'ep-late-band-aci2kkoj-pooler.sa-east-1.aws.neon.tech',
+            'PORT': '5432',
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
+        }
+    }
 
 
 # Password validation
@@ -164,11 +183,22 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'   # 👈 así
 
-# Email configuration
+# Email configuration - USANDO VARIABLES DE ENTORNO (SEGURO)
+# Configuración principal (Gmail)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'clinica.pc.inacap@gmail.com'
-EMAIL_HOST_PASSWORD = 'xrmn kltj ffbd tirk'  # Contraseña de aplicación de Google
-DEFAULT_FROM_EMAIL = 'Clínica PC <clinica.pc.inacap@gmail.com>'
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 15  # Timeout aumentado
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'tu-email@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'tu-contraseña-de-aplicacion')
+DEFAULT_FROM_EMAIL = f'Clínica PC <{os.getenv("EMAIL_HOST_USER", "tu-email@gmail.com")}>'
+
+# Para desarrollo/testing (descomenta la línea de abajo si Gmail no funciona)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Configuración alternativa usando un servicio más confiable (si Gmail falla)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.office365.com'  # Para Outlook/Hotmail
+# EMAIL_PORT = 587

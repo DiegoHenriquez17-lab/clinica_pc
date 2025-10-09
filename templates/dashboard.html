@@ -60,10 +60,84 @@
     </div>
 </div>
 
+
+
 <!-- Recent Devices Table -->
 <div class="bg-white rounded-xl shadow-md overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-xl font-bold text-gray-800">Equipos Recientes</h3>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">
+                {% if filtros.estado_actual or filtros.fecha_desde or filtros.fecha_hasta or filtros.buscar %}
+                    Equipos Filtrados ({{ equipos_recientes|length }})
+                {% else %}
+                    Equipos Recientes
+                {% endif %}
+            </h3>
+            {% if user.is_superuser %}
+                <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                    <i class="fas fa-crown mr-1"></i>MODO ADMINISTRADOR
+                </span>
+            {% endif %}
+        </div>
+        
+        <!-- Filtros de búsqueda -->
+        <form method="GET" class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-64">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-search mr-1"></i>Buscar equipo
+                </label>
+                <input 
+                    type="text" 
+                    name="buscar" 
+                    value="{{ filtros.buscar|default:'' }}"
+                    placeholder="RUT, ID, PC, nombre cliente, marca, modelo..." 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select name="estado" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    {% for valor, etiqueta in filtros.estados_disponibles %}
+                        <option value="{{ valor }}" {% if filtros.estado_actual == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Desde</label>
+                <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Hasta</label>
+                <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+                <select name="ordenar" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    {% for valor, etiqueta in filtros.ordenar_opciones %}
+                        <option value="{{ valor }}" {% if filtros.ordenar_actual == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="flex space-x-2">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm">
+                    <i class="fas fa-search mr-1"></i>Buscar
+                </button>
+                {% if filtros.buscar or filtros.estado_actual or filtros.fecha_desde or filtros.fecha_hasta or filtros.ordenar_actual != '-created_at' %}
+                    <a href="{% url 'dashboard' %}" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm">
+                        <i class="fas fa-times mr-1"></i>Limpiar
+                    </a>
+                {% endif %}
+            </div>
+        </form>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full">
@@ -101,25 +175,50 @@
                             {{ equipo.created_at|date:"d/m/Y H:i" }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <!-- Botón de Boleta -->
-                                <a href="{% url 'generar_boleta' equipo.id %}" class="text-gray-600 hover:text-gray-900" title="Ver Boleta">
-                                    <i class="fas fa-file-invoice mr-1"></i>
+                            <div class="flex space-x-2 items-center">
+                                <!-- Botón de Boleta (Siempre visible) -->
+                                <a href="{% url 'generar_boleta' equipo.id %}" 
+                                   class="text-gray-600 hover:text-gray-900 px-2 py-1 rounded" 
+                                   title="Ver Boleta">
+                                    <i class="fas fa-file-invoice"></i>
                                 </a>
                                 
-                                <!-- Acciones según estado -->
+                                <!-- Acciones según estado (Para todos los usuarios) -->
                                 {% if equipo.estado == 'recepcion' %}
-                                    <a href="{% url 'diagnostico:diagnosticar' equipo.id %}" class="text-blue-600 hover:text-blue-900">
+                                    <a href="{% url 'diagnostico:diagnosticar' equipo.id %}" 
+                                       class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded text-xs">
                                         <i class="fas fa-stethoscope mr-1"></i>Diagnosticar
                                     </a>
                                 {% elif equipo.estado == 'diagnostico' %}
-                                    <a href="{% url 'diagnostico:derivacion' %}" class="text-purple-600 hover:text-purple-900">
+                                    <a href="{% url 'diagnostico:derivacion' %}" 
+                                       class="text-purple-600 hover:text-purple-900 px-2 py-1 rounded text-xs">
                                         <i class="fas fa-route mr-1"></i>Derivar
                                     </a>
                                 {% elif equipo.estado == 'despacho' %}
-                                    <a href="{% url 'entrega:entregar' equipo.id %}" class="text-green-600 hover:text-green-900">
+                                    <a href="{% url 'entrega:entregar' equipo.id %}" 
+                                       class="text-green-600 hover:text-green-900 px-2 py-1 rounded text-xs">
                                         <i class="fas fa-shipping-fast mr-1"></i>Entregar
                                     </a>
+                                {% endif %}
+                                
+                                <!-- Botones de Administrador (Solo superusuarios) -->
+                                {% if user.is_superuser %}
+                                    <div class="border-l border-gray-200 pl-2 ml-2">
+                                        <!-- Botón Actualizar -->
+                                        <a href="{% url 'actualizar_equipo' equipo.id %}" 
+                                           class="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded text-xs" 
+                                           title="Actualizar Equipo (Solo Admin)">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        <!-- Botón Eliminar -->
+                                        <a href="{% url 'eliminar_equipo' equipo.id %}" 
+                                           class="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded text-xs ml-1" 
+                                           title="Eliminar Equipo (Solo Admin)"
+                                           onclick="return confirm('⚠️ ¿Estás seguro?\nEsta acción eliminará permanentemente el equipo.')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
                                 {% endif %}
                             </div>
                         </td>

@@ -36,6 +36,56 @@ footer{background:transparent}
 /* Utilities */
 .text-muted small{opacity:0.9}
 
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-recepcion { background-color: #dbeafe; color: #1e40af; }
+.status-diagnostico { background-color: #fef3c7; color: #92400e; }
+.status-hardware { background-color: #fce7f3; color: #9f1239; }
+.status-software { background-color: #e0e7ff; color: #3730a3; }
+.status-reparacion { background-color: #fed7aa; color: #9a3412; }
+.status-despacho { background-color: #d1fae5; color: #065f46; }
+.status-entregado { background-color: #d1d5db; color: #374151; }
+
+/* Botón Diagnosticar Mejorado */
+.btn-diagnosticar {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.btn-diagnosticar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-diagnosticar:hover::before {
+    left: 100%;
+}
+
+.btn-diagnosticar:hover {
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.btn-diagnosticar:active {
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.6);
+}
+
 @media print{
   nav, footer, .btn, .toast-container { display: none !important; }
   body { background: #fff !important; color: #000 !important; }

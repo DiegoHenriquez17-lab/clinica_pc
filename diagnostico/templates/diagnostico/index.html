@@ -13,7 +13,45 @@
     <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800">Equipos Pendientes</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Equipos Pendientes</h3>
+                </div>
+                
+                <!-- Filtros de búsqueda -->
+                <form method="get" class="flex flex-wrap items-end gap-4">
+                    <div class="flex-1 min-w-64">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-search mr-1"></i>Buscar equipo
+                        </label>
+                        <input 
+                            type="text" 
+                            name="buscar" 
+                            value="{{ buscar_filter|default:'' }}"
+                            placeholder="RUT, ID, PC, nombre cliente, marca, modelo..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+                        <select name="orden" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="fecha_asc" {% if orden_filter == 'fecha_asc' %}selected{% endif %}>Más Antiguo</option>
+                            <option value="fecha_desc" {% if orden_filter == 'fecha_desc' %}selected{% endif %}>Más Nuevo</option>
+                            <option value="cliente" {% if orden_filter == 'cliente' %}selected{% endif %}>Cliente A-Z</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm">
+                            <i class="fas fa-search mr-1"></i>Buscar
+                        </button>
+                        {% if buscar_filter or orden_filter != 'fecha_asc' %}
+                            <a href="{% url 'diagnostico:index' %}" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm">
+                                <i class="fas fa-times mr-1"></i>Limpiar
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
             <div class="divide-y divide-gray-200">
                 {% for equipo in equipos_pendientes %}
@@ -25,17 +63,42 @@
                                         #{{ equipo.id }}
                                     </span>
                                     <h4 class="text-lg font-semibold text-gray-900">{{ equipo.cliente.nombre }}</h4>
+                                    {% if equipo.cliente.rut %}
+                                        <span class="text-xs text-gray-500">{{ equipo.cliente.rut }}</span>
+                                    {% endif %}
                                 </div>
                                 <p class="text-sm text-gray-600 mt-1">{{ equipo.tipo_equipo }}</p>
                                 {% if equipo.marca %}
                                     <p class="text-sm text-gray-500">{{ equipo.marca }} {{ equipo.modelo }}</p>
                                 {% endif %}
+                                {% if equipo.serial %}
+                                    <p class="text-xs text-gray-500">Serie: {{ equipo.serial }}</p>
+                                {% endif %}
                                 <p class="text-sm text-gray-700 mt-2">{{ equipo.problema|truncatewords:15 }}</p>
                                 <p class="text-xs text-gray-500 mt-2">Ingresado: {{ equipo.created_at|date:"d/m/Y H:i" }}</p>
                             </div>
-                            <button class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                <i class="fas fa-stethoscope mr-2"></i>Diagnosticar
-                            </button>
+                            <div class="ml-4 flex flex-col space-y-3">
+                                <button type="button" 
+                                        onclick="mostrarDetalleRecepcion({{ equipo.id }})"
+                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-xs transition duration-200">
+                                    <i class="fas fa-eye mr-1"></i>Ver Detalle
+                                </button>
+                                
+                                <!-- Botón Diagnosticar Mejorado -->
+                                <button type="button"
+                                        onclick="seleccionarEquipo({{ equipo.id }}, '{{ equipo.cliente.nombre }}', '{{ equipo.cliente.rut|default:'Sin RUT' }}', '{{ equipo.tipo_equipo }}', '{{ equipo.problema|escapejs }}', '{{ equipo.relato_cliente|escapejs }}')"
+                                        class="btn-diagnosticar bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 
+                                               text-white px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 
+                                               transform hover:scale-105 hover:shadow-xl active:scale-95
+                                               border-2 border-blue-500 hover:border-blue-400
+                                               focus:outline-none focus:ring-4 focus:ring-blue-300">
+                                    <div class="flex items-center justify-center">
+                                        <i class="fas fa-stethoscope mr-2 text-lg"></i>
+                                        <span class="tracking-wide">DIAGNOSTICAR</span>
+                                    </div>
+                                    <div class="text-xs opacity-90 mt-1">Evaluar Equipo #{{ equipo.id }}</div>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -48,54 +111,142 @@
         </div>
     </div>
 
-    <!-- Diagnosis Form -->
+    <!-- Diagnosis Form - Placeholder Normal -->
     <div>
         <div id="diagnosisFormContainer" class="bg-white rounded-xl shadow-md p-6 hidden">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Realizar Diagnóstico</h3>
-            <form method="post" class="space-y-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Realizar Diagnóstico</h3>
+                <button type="button" onclick="cancelarDiagnostico()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form method="post" class="space-y-8">
                 {% csrf_token %}
                 <input type="hidden" id="equipoId" name="equipo_id">
                 
-                <div id="equipoInfo" class="p-4 bg-gray-50 rounded-lg mb-4">
-                    <!-- Info del equipo se carga dinámicamente -->
+                <!-- Información Completa del Cliente y Equipo - Ampliada -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Info del Cliente -->
+                    <div class="bg-blue-50 rounded-xl p-6 border-l-4 border-blue-400 shadow-sm">
+                        <h4 class="font-bold text-blue-800 flex items-center mb-4 text-lg">
+                            <i class="fas fa-user mr-3 text-xl"></i>Información del Cliente
+                        </h4>
+                        <div id="clienteInfo" class="space-y-3 text-base">
+                            <!-- Info del cliente se carga dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Info del Equipo -->
+                    <div class="bg-green-50 rounded-xl p-6 border-l-4 border-green-400 shadow-sm">
+                        <h4 class="font-bold text-green-800 flex items-center mb-4 text-lg">
+                            <i class="fas fa-laptop mr-3 text-xl"></i>Información del Equipo
+                        </h4>
+                        <div id="equipoInfo" class="space-y-3 text-base">
+                            <!-- Info del equipo se carga dinámicamente -->
+                        </div>
+                    </div>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Diagnóstico *</label>
-                    <textarea name="diagnostico" rows="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required></textarea>
+                <!-- Relato de Recepción - Más Grande y Prominente -->
+                <div id="problemaInfo" class="bg-yellow-50 rounded-xl p-8 border-l-4 border-yellow-400 shadow-sm">
+                    <!-- Problema se carga dinámicamente -->
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Área Recomendada *</label>
-                    <select name="area_recomendada" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
-                        <option value="">Seleccione...</option>
-                        <option value="hardware">Hardware</option>
-                        <option value="software">Software</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad *</label>
-                    <select name="prioridad" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
-                        <option value="baja">Baja</option>
-                        <option value="media" selected>Media</option>
-                        <option value="alta">Alta</option>
-                        <option value="urgente">Urgente</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Costo Estimado</label>
-                    <input type="number" name="costo_estimado" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" min="0" step="0.01">
-                </div>
-
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition duration-200">
-                    <i class="fas fa-check mr-2"></i>Completar Diagnóstico
-                </button>
                 
-                <button type="button" onclick="cancelarDiagnostico()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded-lg transition duration-200">
-                    Cancelar
-                </button>
+                <!-- Formulario de Diagnóstico - Ampliado -->
+                <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+                    <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-clipboard-check mr-3 text-blue-600"></i>
+                        Formulario de Diagnóstico Técnico
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Área Principal de Diagnóstico -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-base font-semibold text-gray-700 mb-3">
+                                <i class="fas fa-stethoscope mr-2 text-blue-600"></i>Diagnóstico Técnico Completo *
+                            </label>
+                            <textarea name="diagnostico" rows="12" 
+                                      class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500 focus:border-blue-500 text-base leading-relaxed
+                                             transition-all duration-200 shadow-sm resize-y min-h-80" 
+                                      placeholder="📝 Describa detalladamente:
+• Diagnóstico técnico realizado
+• Problemas específicos encontrados  
+• Causas identificadas del fallo
+• Componentes afectados
+• Herramientas y métodos utilizados
+• Recomendaciones técnicas
+• Observaciones adicionales..." required></textarea>
+                            <p class="text-sm text-gray-600 mt-2 flex items-center">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Sea lo más detallado posible para facilitar la reparación
+                            </p>
+                        </div>
+                        
+                        <!-- Panel de Configuración -->
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-base font-semibold text-gray-700 mb-3">
+                                    <i class="fas fa-route mr-2 text-green-600"></i>Área Recomendada *
+                                </label>
+                                <select name="area_recomendada" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" required>
+                                    <option value="">Seleccione el área...</option>
+                                    <option value="hardware">🔧 Hardware - Reparación física</option>
+                                    <option value="software">💻 Software - Reparación lógica</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-base font-semibold text-gray-700 mb-3">
+                                    <i class="fas fa-exclamation-triangle mr-2 text-orange-600"></i>Prioridad *
+                                </label>
+                                <select name="prioridad" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" required>
+                                    <option value="baja">🟢 Baja - Normal</option>
+                                    <option value="media" selected>🟡 Media - Estándar</option>
+                                    <option value="alta">🟠 Alta - Importante</option>
+                                    <option value="urgente">🔴 Urgente - Crítico</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                <label class="block text-base font-semibold text-gray-700 mb-3">
+                                    <i class="fas fa-dollar-sign mr-2 text-purple-600"></i>Costo Estimado
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-3 text-gray-500 text-lg">$</span>
+                                    <input type="number" name="costo_estimado" 
+                                           class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" 
+                                           min="0" step="0.01" placeholder="0.00">
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2 flex items-center">
+                                    <i class="fas fa-calculator mr-1"></i>
+                                    Estimación aproximada del costo
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción - Más Grandes -->
+                <div class="flex space-x-6 pt-4">
+                    <button type="submit" 
+                            class="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 
+                                   text-white font-bold py-5 px-8 rounded-xl transition-all duration-200 text-xl
+                                   transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl
+                                   border-2 border-green-500 hover:border-green-400">
+                        <i class="fas fa-check-double mr-3 text-xl"></i>
+                        Completar Diagnóstico
+                    </button>
+                    
+                    <button type="button" onclick="cancelarDiagnostico()" 
+                            class="flex-1 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 
+                                   text-white font-bold py-5 px-8 rounded-xl transition-all duration-200 text-xl
+                                   transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl
+                                   border-2 border-gray-400 hover:border-gray-300">
+                        <i class="fas fa-times-circle mr-3 text-xl"></i>
+                        Cancelar
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -108,32 +259,307 @@
     </div>
 </div>
 
+<!-- Modal de detalles de recepción -->
+<div id="modalDetalleRecepcion" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>Detalle de Recepción
+                    </h3>
+                    <button onclick="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="contenidoDetalleRecepcion" class="p-6">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Diagnóstico Grande -->
+<div id="modalDiagnostico" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-screen overflow-y-auto">
+            <!-- Header del Modal -->
+            <div class="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-3xl font-bold text-white flex items-center">
+                        <i class="fas fa-stethoscope mr-3 text-4xl"></i>
+                        📋 Diagnóstico Técnico Completo
+                    </h3>
+                    <button onclick="cerrarModalDiagnostico()" class="text-white hover:text-gray-200 p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <p class="text-blue-100 mt-2 text-lg">Evalúe y diagnostique el equipo seleccionado</p>
+            </div>
+            
+            <!-- Contenido del Modal -->
+            <div id="contenidoModalDiagnostico" class="p-8">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function seleccionarEquipo(id, cliente, rut, tipo, problema, relato_cliente) {
-    // Mostrar formulario de diagnóstico
-    document.getElementById('diagnosisFormContainer').classList.remove('hidden');
-    document.getElementById('diagnosisPlaceholder').classList.add('hidden');
+    // Mostrar modal de diagnóstico
+    document.getElementById('modalDiagnostico').classList.remove('hidden');
     
-    // Llenar información del equipo
-    document.getElementById('equipoId').value = id;
-    document.getElementById('equipoInfo').innerHTML = `
-        <h4 class="font-semibold text-gray-900">#${id} - ${cliente}</h4>
-        <p class="text-sm text-gray-600">RUT: ${rut} | ${tipo}</p>
-        <p class="text-sm text-gray-700 mt-2"><strong>Problema Reportado:</strong> ${problema}</p>
-        ${relato_cliente ? `<div class="mt-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-            <p class="text-sm font-medium text-yellow-800">Relato del Cliente:</p>
-            <p class="text-sm text-yellow-700 mt-1">"${relato_cliente}"</p>
-        </div>` : ''}
-    `;
+    // Cargar contenido del modal
+    cargarModalDiagnostico(id, cliente, rut, tipo, problema, relato_cliente);
 }
 
 function cancelarDiagnostico() {
-    // Ocultar formulario de diagnóstico
-    document.getElementById('diagnosisFormContainer').classList.add('hidden');
-    document.getElementById('diagnosisPlaceholder').classList.remove('hidden');
+    // Ya no se usa - mantenemos por compatibilidad
+    console.log('Función cancelarDiagnostico deprecada');
+}
+
+function mostrarDetalleRecepcion(equipoId) {
+    // Mostrar modal
+    document.getElementById('modalDetalleRecepcion').classList.remove('hidden');
     
-    // Limpiar formulario
-    document.querySelector('form').reset();
+    // Cargar contenido
+    fetch(`/recepcion/detalle/${equipoId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('contenidoDetalleRecepcion').innerHTML = data.html;
+            } else {
+                document.getElementById('contenidoDetalleRecepcion').innerHTML = 
+                    '<div class="text-center text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Error al cargar los detalles</div>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('contenidoDetalleRecepcion').innerHTML = 
+                '<div class="text-center text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Error de conexión</div>';
+        });
+}
+
+function cerrarModalDetalle() {
+    document.getElementById('modalDetalleRecepcion').classList.add('hidden');
+}
+
+function cargarModalDiagnostico(id, cliente, rut, tipo, problema, relato_cliente) {
+    document.getElementById('contenidoModalDiagnostico').innerHTML = `
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            <input type="hidden" id="equipoIdModal" name="equipo_id" value="${id}">
+            
+            <!-- Información Completa del Cliente y Equipo - Ampliada -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Info del Cliente -->
+                <div class="bg-blue-50 rounded-xl p-6 border-l-4 border-blue-400 shadow-sm">
+                    <h4 class="font-bold text-blue-800 flex items-center mb-4 text-lg">
+                        <i class="fas fa-user mr-3 text-xl"></i>Información del Cliente
+                    </h4>
+                    <div class="space-y-3 text-base">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-user-tag mr-2 text-blue-600"></i>
+                            <span class="font-semibold text-gray-700">Nombre:</span> 
+                            <span class="text-gray-900 ml-2 font-medium">${cliente}</span>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-id-card mr-2 text-blue-600"></i>
+                            <span class="font-semibold text-gray-700">RUT:</span> 
+                            <span class="text-gray-900 ml-2">${rut || 'No registrado'}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-phone mr-2 text-blue-600"></i>
+                            <span class="font-semibold text-gray-700">Contacto:</span> 
+                            <span class="text-blue-600 ml-2 cursor-pointer hover:underline">Ver en sistema</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Info del Equipo -->
+                <div class="bg-green-50 rounded-xl p-6 border-l-4 border-green-400 shadow-sm">
+                    <h4 class="font-bold text-green-800 flex items-center mb-4 text-lg">
+                        <i class="fas fa-laptop mr-3 text-xl"></i>Información del Equipo
+                    </h4>
+                    <div class="space-y-3 text-base">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-hashtag mr-2 text-green-600"></i>
+                            <span class="font-semibold text-gray-700">ID Equipo:</span> 
+                            <span class="text-gray-900 ml-2 font-bold text-lg">#${id}</span>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-desktop mr-2 text-green-600"></i>
+                            <span class="font-semibold text-gray-700">Tipo:</span> 
+                            <span class="text-gray-900 ml-2 font-medium">${tipo}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-traffic-light mr-2 text-green-600"></i>
+                            <span class="font-semibold text-gray-700">Estado:</span> 
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium ml-2">
+                                🔍 Pendiente Diagnóstico
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Relato de Recepción - Más Grande y Prominente -->
+            <div class="bg-yellow-50 rounded-xl p-8 border-l-4 border-yellow-400 shadow-sm">
+                <div class="mb-6">
+                    <h4 class="font-bold text-yellow-800 flex items-center mb-4 text-xl">
+                        <i class="fas fa-exclamation-triangle mr-3 text-2xl"></i>
+                        📋 Reporte de Recepción - Información del Cliente
+                    </h4>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Descripción del Problema -->
+                    <div class="bg-yellow-100 rounded-lg p-6 border border-yellow-200">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-clipboard-list mr-2 text-yellow-700 text-lg"></i>
+                            <span class="font-bold text-yellow-800 text-lg">Descripción del Problema:</span>
+                        </div>
+                        <div class="bg-white rounded-md p-4 border-l-4 border-yellow-400">
+                            <p class="text-gray-800 text-base leading-relaxed">${problema}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Relato del Cliente -->
+                    <div class="bg-orange-50 rounded-lg p-6 border border-orange-200">
+                        ${relato_cliente ? `
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-quote-left mr-2 text-orange-700 text-lg"></i>
+                                <span class="font-bold text-orange-800 text-lg">Palabras Exactas del Cliente:</span>
+                            </div>
+                            <div class="bg-white rounded-md p-4 border-l-4 border-orange-400">
+                                <p class="text-gray-800 text-base italic leading-relaxed">"${relato_cliente}"</p>
+                            </div>
+                        ` : `
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-comment-slash mr-2 text-gray-500 text-lg"></i>
+                                <span class="font-bold text-gray-600 text-lg">Relato del Cliente:</span>
+                            </div>
+                            <div class="bg-gray-100 rounded-md p-4 border-l-4 border-gray-400">
+                                <p class="text-gray-600 text-base italic">No se registró relato específico del cliente</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+                
+                <!-- Instrucciones para el Técnico -->
+                <div class="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-lightbulb mr-2 text-blue-600"></i>
+                        <span class="font-semibold text-blue-800">Instrucciones para el Diagnóstico:</span>
+                    </div>
+                    <p class="text-blue-700 text-sm">
+                        📌 Revise cuidadosamente la información proporcionada por el cliente antes de iniciar el diagnóstico técnico.
+                        Considere tanto la descripción técnica como las palabras exactas del cliente para un diagnóstico más preciso.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Formulario de Diagnóstico - Ampliado -->
+            <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+                <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-clipboard-check mr-3 text-blue-600"></i>
+                    Formulario de Diagnóstico Técnico
+                </h4>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Área Principal de Diagnóstico -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-base font-semibold text-gray-700 mb-3">
+                            <i class="fas fa-stethoscope mr-2 text-blue-600"></i>Diagnóstico Técnico Completo *
+                        </label>
+                        <textarea name="diagnostico" rows="12" 
+                                  class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500 focus:border-blue-500 text-base leading-relaxed
+                                         transition-all duration-200 shadow-sm resize-y min-h-80" 
+                                  placeholder="📝 Describa detalladamente:
+• Diagnóstico técnico realizado
+• Problemas específicos encontrados  
+• Causas identificadas del fallo
+• Componentes afectados
+• Herramientas y métodos utilizados
+• Recomendaciones técnicas
+• Observaciones adicionales..." required></textarea>
+                        <p class="text-sm text-gray-600 mt-2 flex items-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Sea lo más detallado posible para facilitar la reparación
+                        </p>
+                    </div>
+                    
+                    <!-- Panel de Configuración -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <label class="block text-base font-semibold text-gray-700 mb-3">
+                                <i class="fas fa-route mr-2 text-green-600"></i>Área Recomendada *
+                            </label>
+                            <select name="area_recomendada" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" required>
+                                <option value="">Seleccione el área...</option>
+                                <option value="hardware">🔧 Hardware - Reparación física</option>
+                                <option value="software">💻 Software - Reparación lógica</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <label class="block text-base font-semibold text-gray-700 mb-3">
+                                <i class="fas fa-exclamation-triangle mr-2 text-orange-600"></i>Prioridad *
+                            </label>
+                            <select name="prioridad" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" required>
+                                <option value="baja">🟢 Baja - Normal</option>
+                                <option value="media" selected>🟡 Media - Estándar</option>
+                                <option value="alta">🟠 Alta - Importante</option>
+                                <option value="urgente">🔴 Urgente - Crítico</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <label class="block text-base font-semibold text-gray-700 mb-3">
+                                <i class="fas fa-dollar-sign mr-2 text-purple-600"></i>Costo Estimado
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3 text-gray-500 text-lg">$</span>
+                                <input type="number" name="costo_estimado" 
+                                       class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" 
+                                       min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 flex items-center">
+                                <i class="fas fa-calculator mr-1"></i>
+                                Estimación aproximada del costo
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de Acción - Más Grandes -->
+            <div class="flex space-x-6 pt-4">
+                <button type="submit" 
+                        class="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 
+                               text-white font-bold py-5 px-8 rounded-xl transition-all duration-200 text-xl
+                               transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl
+                               border-2 border-green-500 hover:border-green-400">
+                    <i class="fas fa-check-double mr-3 text-xl"></i>
+                    Completar Diagnóstico
+                </button>
+                
+                <button type="button" onclick="cerrarModalDiagnostico()" 
+                        class="flex-1 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 
+                               text-white font-bold py-5 px-8 rounded-xl transition-all duration-200 text-xl
+                               transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl
+                               border-2 border-gray-400 hover:border-gray-300">
+                    <i class="fas fa-times-circle mr-3 text-xl"></i>
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    `;
+}
+
+function cerrarModalDiagnostico() {
+    document.getElementById('modalDiagnostico').classList.add('hidden');
 }
 </script>
 {% endblock %}
