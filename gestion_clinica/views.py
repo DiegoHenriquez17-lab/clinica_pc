@@ -7,6 +7,8 @@ from recepcion.models import Equipo, TrazaEquipo
 from diagnostico.models import Diagnostico, ReparacionHardware, ReparacionSoftware
 from django.utils import timezone
 from datetime import timedelta
+from recepcion.forms import EquipoForm, ClienteForm
+from django.contrib.auth.models import Group
 
 
 class DashboardView(TemplateView):
@@ -80,7 +82,7 @@ class DashboardView(TemplateView):
         else:
             equipos_query = equipos_query.order_by('-created_at')
         
-        # Limitar resultados para rendimiento
+    # Limitar resultados para rendimiento
         context['equipos_recientes'] = equipos_query[:50]
         
         # Agregar opciones de filtro al contexto
@@ -109,6 +111,12 @@ class DashboardView(TemplateView):
             ]
         }
         
+        # Permiso de eliminación (solo admin o grupo 'recepcion')
+        user = self.request.user
+        context['can_delete'] = (
+            user.is_authenticated and (user.is_superuser or user.groups.filter(name='recepcion').exists())
+        )
+
         return context
 
 
@@ -147,9 +155,13 @@ def generar_boleta(request, equipo_id):
 
 @login_required
 def eliminar_equipo(request, equipo_id):
-    """Eliminar equipo - Solo administradores"""
-    if not request.user.is_superuser:
+    """Eliminar equipo - Disponible para usuarios con acceso al panel (is_staff)."""
+    if not request.user.is_staff:
         messages.error(request, "No tienes permisos para realizar esta acción.")
+        return redirect('dashboard')
+    # Solo admin o grupo 'recepcion' puede eliminar
+    if not (request.user.is_superuser or request.user.groups.filter(name='recepcion').exists()):
+        messages.error(request, "Solo administradores o recepción pueden eliminar equipos.")
         return redirect('dashboard')
     
     equipo = get_object_or_404(Equipo, id=equipo_id)
@@ -175,50 +187,42 @@ def eliminar_equipo(request, equipo_id):
 
 @login_required
 def actualizar_equipo(request, equipo_id):
-    """Actualizar información del equipo - Solo administradores"""
-    if not request.user.is_superuser:
+    """Actualizar información del equipo - Disponible para usuarios con acceso al panel (is_staff)."""
+    if not request.user.is_staff:
         messages.error(request, "No tienes permisos para realizar esta acción.")
         return redirect('dashboard')
     
     equipo = get_object_or_404(Equipo, id=equipo_id)
     
     if request.method == 'POST':
-        # Actualizar campos del equipo
-        equipo.tipo_equipo = request.POST.get('tipo_equipo', equipo.tipo_equipo)
-        equipo.marca = request.POST.get('marca', equipo.marca)
-        equipo.modelo = request.POST.get('modelo', equipo.modelo)
-        equipo.estado = request.POST.get('estado', equipo.estado)
-        equipo.descripcion_problema = request.POST.get('descripcion_problema', equipo.descripcion_problema)
-        equipo.observaciones = request.POST.get('observaciones', equipo.observaciones)
-        
-        # Actualizar información del cliente
-        equipo.cliente.nombre = request.POST.get('cliente_nombre', equipo.cliente.nombre)
-        equipo.cliente.email = request.POST.get('cliente_email', equipo.cliente.email)
-        equipo.cliente.telefono = request.POST.get('cliente_telefono', equipo.cliente.telefono)
-        
-        equipo.save()
-        equipo.cliente.save()
-        
-        # Crear registro en traza
-        TrazaEquipo.objects.create(
-            equipo=equipo,
-            usuario=request.user,
-            accion=f"Información actualizada por administrador: {request.user.username}"
-        )
-        
-        messages.success(request, f"Equipo #{equipo_id} actualizado correctamente.")
-        return redirect('generar_boleta', equipo_id=equipo_id)
+        equipo_form = EquipoForm(request.POST, instance=equipo)
+        cliente_form = ClienteForm(request.POST, instance=equipo.cliente)
+
+        if equipo_form.is_valid() and cliente_form.is_valid():
+            equipo_form.save()
+            cliente_form.save()
+
+            # Crear registro en traza
+            TrazaEquipo.objects.create(
+                equipo=equipo,
+                usuario=request.user,
+                accion=f"Información actualizada por: {request.user.username}"
+            )
+
+            messages.success(request, f"Equipo #{equipo_id} actualizado correctamente.")
+            return redirect('generar_boleta', equipo_id=equipo_id)
+        else:
+            messages.error(request, "Por favor corrige los errores del formulario.")
     
     # Mostrar formulario de edición
+    # Preparar formularios para GET o para re-render en caso de errores
+    if request.method != 'POST':
+        equipo_form = EquipoForm(instance=equipo)
+        cliente_form = ClienteForm(instance=equipo.cliente)
+
     context = {
         'equipo': equipo,
-        'estados_disponibles': [
-            ('recepcion', 'Recepción'),
-            ('diagnostico', 'Diagnóstico'),
-            ('hardware', 'Reparación Hardware'),
-            ('software', 'Reparación Software'),
-            ('despacho', 'Listo para entrega'),  
-            ('entregado', 'Entregado'),
-        ]
+        'equipo_form': equipo_form,
+        'cliente_form': cliente_form,
     }
     return render(request, 'admin/actualizar_equipo.html', context)

@@ -183,22 +183,58 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'   # 👈 así
 
-# Email configuration - USANDO VARIABLES DE ENTORNO (SEGURO)
-# Configuración principal (Gmail)
+# ============================================
+# 📧 CONFIGURACIÓN DE EMAIL MEJORADA Y ROBUSTA
+# ============================================
+
+# Seleccionar el proveedor de email activo desde variables de entorno
+EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'gmail').lower()
+
+# Configuración común
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+EMAIL_TIMEOUT = 30  # Timeout aumentado para conexiones lentas
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_TIMEOUT = 15  # Timeout aumentado
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'tu-email@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'tu-contraseña-de-aplicacion')
-DEFAULT_FROM_EMAIL = f'Clínica PC <{os.getenv("EMAIL_HOST_USER", "tu-email@gmail.com")}>'
 
-# Para desarrollo/testing (descomenta la línea de abajo si Gmail no funciona)
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# 🔧 Configuraciones por proveedor
+if EMAIL_PROVIDER == 'gmail':
+    # Gmail (requiere contraseña de aplicación)
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'tu-email@gmail.com')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'tu-contraseña-de-aplicacion')
+    
+elif EMAIL_PROVIDER == 'outlook':
+    # Outlook/Hotmail (más estable para envíos masivos)
+    EMAIL_HOST = 'smtp-mail.outlook.com'
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'tu-email@outlook.com')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'tu-contraseña')
+    
+elif EMAIL_PROVIDER == 'yahoo':
+    # Yahoo Mail
+    EMAIL_HOST = 'smtp.mail.yahoo.com'
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'tu-email@yahoo.com')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'tu-contraseña-de-aplicacion')
+    
+elif EMAIL_PROVIDER == 'console':
+    # Para desarrollo - muestra emails en consola
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST_USER = 'desarrollo@clinicapc.com'
+    
+else:
+    # Configuración por defecto (Gmail)
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'tu-email@gmail.com')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'tu-contraseña-de-aplicacion')
 
-# Configuración alternativa usando un servicio más confiable (si Gmail falla)
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.office365.com'  # Para Outlook/Hotmail
-# EMAIL_PORT = 587
+# Email remitente por defecto
+DEFAULT_FROM_EMAIL = f'Clínica PC <{EMAIL_HOST_USER}>'
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# 🚀 CONFIGURACIÓN AVANZADA DE RENDIMIENTO
+EMAIL_FAIL_SILENTLY = False  # Para detectar errores
+EMAIL_MAX_RETRIES = 3  # Número de reintentos
+EMAIL_RETRY_DELAY = 5  # Segundos entre reintentos

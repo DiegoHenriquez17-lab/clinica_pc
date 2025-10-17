@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Actualizar Equipo #{{ equipo.id }} - Clínica PC{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+            <div class="flex items-center">
+                <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                    <i class="fas fa-edit text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Actualizar Equipo #{{ equipo.id }}</h1>
+                    <p class="text-blue-100">Panel de administrador - Edición avanzada</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="p-8">
+            {% csrf_token %}
+            
+            <!-- Información del Cliente -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-user text-blue-600 mr-2"></i>
+                    Información del Cliente
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
+                        {{ cliente_form.nombre }}
+                        {{ cliente_form.nombre.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        {{ cliente_form.correo }}
+                        {{ cliente_form.correo.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                        {{ cliente_form.telefono }}
+                        {{ cliente_form.telefono.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Equipo -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-laptop text-green-600 mr-2"></i>
+                    Información del Equipo
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Equipo</label>
+                        {{ equipo_form.tipo_equipo }}
+                        {{ equipo_form.tipo_equipo.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Marca</label>
+                        {{ equipo_form.marca }}
+                        {{ equipo_form.marca.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Modelo</label>
+                        {{ equipo_form.modelo }}
+                        {{ equipo_form.modelo.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                        {{ equipo_form.estado }}
+                        {{ equipo_form.estado.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descripción del Problema -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                    Descripción del Problema
+                </h3>
+                {{ equipo_form.relato_cliente }}
+                {{ equipo_form.relato_cliente.errors }}
+            </div>
+
+            <!-- Observaciones -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-sticky-note text-purple-600 mr-2"></i>
+                    Observaciones Internas
+                </h3>
+                {{ equipo_form.observaciones_adicionales }}
+                {{ equipo_form.observaciones_adicionales.errors }}
+            </div>
+
+            <!-- Información de Sistema (Solo lectura) -->
+            <div class="mb-8 bg-gray-50 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-info-circle text-gray-600 mr-2"></i>
+                    Información del Sistema (Solo lectura)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Fecha de Ingreso</p>
+                        <p class="font-semibold text-gray-900">{{ equipo.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Última Actualización</p>
+                        <p class="font-semibold text-gray-900">{{ equipo.updated_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">ID del Cliente</p>
+                        <p class="font-semibold text-gray-900">#{{ equipo.cliente.id }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                <a href="{% url 'generar_boleta' equipo.id %}" 
+                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver a la Boleta
+                </a>
+                
+                <div class="flex space-x-4">
+                    <a href="{% url 'dashboard' %}" 
+                       class="px-6 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </a>
+                    <button type="submit" 
+                            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Validación del formulario
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitButton = document.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', function(e) {
+        // Validar campos requeridos (nombres reales de los inputs del ModelForm)
+        const clienteNombre = document.querySelector('input[name="nombre"]').value.trim();
+        const tipoEquipo = document.querySelector('input[name="tipo_equipo"]').value.trim();
+
+        if (!clienteNombre || !tipoEquipo) {
+            e.preventDefault();
+            alert('Por favor, completa al menos el nombre del cliente y el tipo de equipo.');
+            return;
+        }
+
+        // Confirmar actualización
+        if (!confirm('¿Estás seguro de que quieres actualizar la información de este equipo?')) {
+            e.preventDefault();
+        }
+    });
+
+    // Auto-guardar indicador
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            submitButton.textContent = '💾 Hay cambios sin guardar';
+            submitButton.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+            submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        });
+    });
+});
+</script>
+{% endblock %}

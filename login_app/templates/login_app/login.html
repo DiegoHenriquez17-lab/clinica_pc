@@ -13,6 +13,31 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Mascota SVG limpia con manos reales */
+        .scene { perspective: 1000px; }
+    svg.yeti-svg { width: 180px; height: 180px; display: block; margin: 0 auto; pointer-events: none; }
+    /* Avatar circular como la referencia */
+    .avatar-ring { fill: #CBE7FF; stroke: #6FB6F0; stroke-width: 6; }
+        .skin { fill: #F8FAFC; stroke: #DBEAFE; stroke-width: 2; }
+        .fur { fill: #E0F2FE; }
+        .accent { fill: #60A5FA; }
+        .line { stroke: #0F172A; stroke-width: 2; stroke-linecap: round; }
+        /* Pupilas animables via transform */
+        #pupilLeft, #pupilRight { transition: transform .06s linear; transform-origin: center; }
+        /* Brazos (manos) por defecto abajo */
+        #armLeft, #armRight { transition: transform .25s ease; transform-origin: 50% 10%; }
+    /* Al cubrir: subir, cruzar y ESCALAR para cubrir toda la cara */
+    .cover-eyes #armLeft { transform: translate(72px, -78px) rotate(-12deg) scale(1.45); }
+    .cover-eyes #armRight { transform: translate(-72px, -78px) rotate(12deg) scale(1.45); }
+        /* Rebote sutil al cubrir */
+        .cover-eyes #head { animation: bounce 0.45s ease; }
+        @keyframes bounce { 0%{transform: translateY(0)} 40%{transform: translateY(-4px)} 100%{transform: translateY(0)} }
+        .field { position: relative; }
+        .field .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .field input { padding-left: 40px; }
+    /* Al cubrir, ocultar pupilas y líneas para evitar que se vean */
+    .cover-eyes #pupilLeft, .cover-eyes #pupilRight { opacity: 0; }
+    .cover-eyes #eyeLineL, .cover-eyes #eyeLineR { opacity: 0; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -27,6 +52,59 @@
                 <p class="text-gray-600 mt-2">Sistema de Gestión Técnica</p>
             </div>
             
+            <!-- Mascota animada -->
+            <div id="mascot" class="scene mb-6 select-none">
+                <!-- Mascota SVG estilo referencia: avatar circular, manos cubren ojos -->
+                <svg class="yeti-svg" viewBox="0 0 200 200" aria-hidden="true">
+                    <!-- Avatar circular de fondo -->
+                    <circle cx="100" cy="100" r="86" class="avatar-ring" />
+                    <!-- Sombra cuerpo -->
+                    <ellipse cx="100" cy="155" rx="50" ry="16" fill="#DDECFB" />
+                    <!-- Cuerpo -->
+                    <ellipse cx="100" cy="130" rx="52" ry="46" class="fur" />
+                    <!-- Cabeza y cara -->
+                    <g id="head">
+                        <circle cx="100" cy="85" r="42" class="skin" />
+                        <!-- Pelo superior -->
+                        <path d="M64,85 C70,60 130,60 136,85" class="fur" />
+                        <!-- Ojos (blanco) -->
+                        <circle cx="84" cy="82" r="10" fill="#fff" />
+                        <circle cx="116" cy="82" r="10" fill="#fff" />
+                        <!-- Pupilas movibles -->
+                        <g id="pupilLeft"><circle cx="84" cy="82" r="4.2" fill="#0F172A" /></g>
+                        <g id="pupilRight"><circle cx="116" cy="82" r="4.2" fill="#0F172A" /></g>
+                        <!-- Boca con lengua -->
+                        <path d="M90,100 q10,10 20,0" fill="none" stroke="#1D4ED8" stroke-width="4" stroke-linecap="round" />
+                        <ellipse cx="100" cy="104" rx="6" ry="3" fill="#EF4444" />
+                    </g>
+                    <!-- Brazos y manos (por encima de la cabeza para cubrir) -->
+                    <g id="armLeft">
+                        <!-- Antebrazo -->
+                        <path d="M38,118 q26,-20 46,-4" class="fur" />
+                        <!-- Mano izquierda estilo referencia: blanca con borde azul y divisiones de dedos -->
+                        <g>
+                            <rect x="64" y="108" width="28" height="20" rx="6" ry="6" fill="#F8FAFC" stroke="#6FB6F0" stroke-width="2.5" />
+                            <!-- divisiones de dedos -->
+                            <path d="M72 108 v8" stroke="#6FB6F0" stroke-width="2" stroke-linecap="round" />
+                            <path d="M78 108 v8" stroke="#6FB6F0" stroke-width="2" stroke-linecap="round" />
+                            <path d="M84 108 v8" stroke="#6FB6F0" stroke-width="2" stroke-linecap="round" />
+                        </g>
+                    </g>
+                    <g id="armRight">
+                        <!-- Antebrazo -->
+                        <path d="M162,118 q-26,-20 -46,-4" class="fur" />
+                        <!-- Mano derecha estilo referencia -->
+                        <g>
+                            <rect x="108" y="108" width="28" height="20" rx="6" ry="6" fill="#F8FAFC" stroke="#6FB6F0" stroke-width="2.5" />
+                            <!-- divisiones de dedos -->
+                            <path d="M116 108 v8" stroke="#6FB6F0" stroke-width="2" stroke-linecap="round" />
+                            <path d="M122 108 v8" stroke="#6FB6F0" stroke-width="2" stroke-linecap="round" />
+                            <path d="M128 108 v8" stroke="#6FB6F0" stroke-width="2" stroke-linecap="round" />
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
             {% if messages %}
                 {% for message in messages %}
                     <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -54,7 +132,12 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                             <i class="fas fa-lock text-gray-400"></i>
                         </span>
-                        <input type="password" name="clave" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ingrese su contraseña" required>
+                        <input type="password" name="clave" id="clave" class="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ingrese su contraseña" required>
+                        <!-- Mostrar contraseña -->
+                        <label for="showpass" class="absolute inset-y-0 right-0 flex items-center pr-3 select-none text-sm text-gray-600 cursor-pointer gap-2">
+                            <input id="showpass" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                            Mostrar
+                        </label>
                     </div>
                 </div>
                 
@@ -69,5 +152,49 @@
             
         </div>
     </div>
+    <script>
+    (function(){
+        const card = document.querySelector('.bg-white.rounded-2xl, .bg-white');
+        const mascot = document.getElementById('mascot');
+        const pupilL = document.getElementById('pupilLeft');
+        const pupilR = document.getElementById('pupilRight');
+        const password = document.getElementById('clave');
+        const showPass = document.getElementById('showpass');
+
+        if (!mascot || !pupilL || !pupilR) return;
+
+        const maxOffset = 6; // px
+        function movePupils(e){
+            const rect = (card || mascot).getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2 - 20; // aproximado a ojos del SVG
+            const dx = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width/2)));
+            const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height/2)));
+            const tx = dx * maxOffset;
+            const ty = dy * maxOffset;
+            // Pupilas son grupos <g> en SVG, aceptan transform css
+            pupilL.style.transform = `translate(${tx}px, ${ty}px)`;
+            pupilR.style.transform = `translate(${tx}px, ${ty}px)`;
+        }
+        document.addEventListener('mousemove', movePupils);
+
+        function cover(){
+            if (showPass && showPass.checked) return uncover();
+            mascot.classList.add('cover-eyes');
+        }
+        function uncover(){ mascot.classList.remove('cover-eyes'); }
+        if (password){
+            password.addEventListener('focus', cover);
+            password.addEventListener('blur', uncover);
+            password.addEventListener('input', cover);
+        }
+        if (showPass){
+            showPass.addEventListener('change', () => {
+                password.type = showPass.checked ? 'text' : 'password';
+                if (showPass.checked) uncover(); else cover();
+            });
+        }
+    })();
+    </script>
 </body>
 </html>

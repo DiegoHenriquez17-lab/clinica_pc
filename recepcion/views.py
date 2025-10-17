@@ -177,14 +177,19 @@ def generar_boleta_pdf(equipo):
         # Configurar timeouts agresivos
         chrome_options.add_argument('--dom-automation-controller')
         
-        # Crear driver con cache de ChromeDriverManager (solo descarga una vez)
+        # Crear driver con ChromeDriverManager actualizado
         try:
-            service = Service(ChromeDriverManager(cache_valid_range=30).install())
+            service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
         except Exception as e:
             print(f"Error con ChromeDriverManager: {e}")
             # Fallback: intentar con Chrome por defecto del sistema
-            driver = webdriver.Chrome(options=chrome_options)
+            try:
+                driver = webdriver.Chrome(options=chrome_options)
+            except Exception as e2:
+                print(f"Error con Chrome del sistema: {e2}")
+                # Usar fallback PDF
+                return generar_boleta_pdf_fallback(equipo)
         
         # Configurar timeouts
         driver.set_page_load_timeout(10)  # Max 10 segundos para cargar
@@ -420,6 +425,119 @@ Equipo Clínica PC
         print(f"❌ Error enviando boleta #{equipo.id}: {str(e)}")
 
 
+def enviar_boleta_robusta(equipo, email_cliente):
+    """Función mejorada para envío de boletas con sistema robusto - BREVO PRIMERO"""
+    try:
+        from gestion_clinica.email_services import send_email_with_fallback_services
+        from datetime import datetime
+        import logging
+        import os
+        
+        logger = logging.getLogger(__name__)
+        
+        # Generar PDF
+        pdf_content = generar_boleta_pdf(equipo)
+        
+        if pdf_content:
+            print(f"📄 PDF generado exitosamente para boleta #{equipo.id}")
+            
+            # 🚀 SISTEMA OPTIMIZADO - BREVO PRIMERO (más confiable que SMTP)
+            
+            subject = f"Boleta de Recepción #{equipo.id} - Clínica PC"
+            message = f"""
+Estimado/a cliente,
+
+Adjunto encontrará la boleta de recepción para su equipo #{equipo.id}.
+
+Esta boleta confirma que hemos recibido su equipo y contiene toda la información relevante sobre el estado actual y los siguientes pasos.
+
+Por favor, conserve esta boleta como comprobante de nuestro servicio.
+
+Si tiene alguna pregunta, no dude en contactarnos.
+
+Saludos cordiales,
+Equipo Clínica PC
+            """.strip()
+            
+            # Paso 1: Intentar DIRECTAMENTE con servicios API (Brevo/SendGrid) - MÁS CONFIABLE
+            print(f"🚀 Paso 1: Intentando con servicios API confiables (Brevo/SendGrid)...")
+            
+            result = send_email_with_fallback_services(
+                to_email=email_cliente,
+                subject=subject,
+                message=message,
+                attachment_data=pdf_content,
+                attachment_name=f'boleta_{equipo.id}.pdf'
+            )
+            
+            if result['success']:
+                print(f"✅ Boleta #{equipo.id} enviada exitosamente con {result['provider']}")
+                return result
+            
+            # Paso 3: Si todo falla, guardar para reenvío posterior
+            print(f"🔄 Paso 3: Todos los servicios fallaron, guardando para reenvío...")
+            
+            # Guardar en el sistema para reenvío manual
+            try:
+                # Crear directorio para boletas pendientes
+                pending_dir = os.path.join(settings.MEDIA_ROOT, 'boletas_pendientes')
+                os.makedirs(pending_dir, exist_ok=True)
+                
+                # Guardar PDF
+                pdf_filename = f'boleta_{equipo.id}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+                pdf_path = os.path.join(pending_dir, pdf_filename)
+                
+                with open(pdf_path, 'wb') as f:
+                    f.write(pdf_content)
+                
+                # Guardar información del email pendiente
+                info_filename = f'email_info_{equipo.id}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt'
+                info_path = os.path.join(pending_dir, info_filename)
+                
+                with open(info_path, 'w', encoding='utf-8') as f:
+                    f.write(f"Equipo ID: {equipo.id}\n")
+                    f.write(f"Email Cliente: {email_cliente}\n")
+                    f.write(f"Fecha: {datetime.now()}\n")
+                    f.write(f"PDF: {pdf_filename}\n")
+                    f.write(f"Último Error: {result['message']}\n")
+                
+                print(f"💾 Boleta #{equipo.id} guardada para reenvío posterior")
+                print(f"📁 Ubicación: {pdf_path}")
+                
+                return {
+                    'success': False,
+                    'message': f'Error de envío. Boleta guardada para reenvío posterior en: {pdf_filename}',
+                    'provider': 'saved_for_retry',
+                    'pdf_path': pdf_path
+                }
+                
+            except Exception as save_error:
+                logger.error(f"❌ Error guardando boleta para reenvío: {str(save_error)}")
+                return {
+                    'success': False,
+                    'message': f'Error crítico: No se pudo enviar ni guardar la boleta. {str(save_error)}',
+                    'provider': 'critical_error'
+                }
+                
+        else:
+            error_msg = f"❌ Error al generar PDF para boleta #{equipo.id}"
+            print(error_msg)
+            return {
+                'success': False,
+                'message': error_msg,
+                'provider': 'pdf_error'
+            }
+            
+    except Exception as e:
+        error_msg = f"❌ Error crítico enviando boleta #{equipo.id}: {str(e)}"
+        print(error_msg)
+        return {
+            'success': False,
+            'message': error_msg,
+            'provider': 'critical_error'
+        }
+
+
 @role_required('recepcion')
 def enviar_boleta_email(request, equipo_id):
     """Envía la boleta por email al cliente de forma asíncrona"""
@@ -433,13 +551,29 @@ def enviar_boleta_email(request, equipo_id):
             return redirect('generar_boleta', equipo_id=equipo_id)
         
         try:
-            # Iniciar el proceso en segundo plano
-            thread = threading.Thread(
-                target=enviar_boleta_asincrono,
-                args=(equipo, email_cliente)
-            )
-            thread.daemon = True
-            thread.start()
+            # 🚀 USAR EL NUEVO SISTEMA ROBUSTO
+            print(f"📧 Iniciando envío robusto de boleta #{equipo.id} a {email_cliente}")
+            
+            # Envío síncrono con el nuevo sistema (más confiable que threading)
+            result = enviar_boleta_robusta(equipo, email_cliente)
+            
+            if result['success']:
+                messages.success(
+                    request, 
+                    f'✅ Boleta enviada exitosamente a {email_cliente} usando {result["provider"]}'
+                )
+            else:
+                if result['provider'] == 'saved_for_retry':
+                    messages.warning(
+                        request,
+                        f'⚠️ No se pudo enviar por email, pero la boleta se guardó para reenvío posterior. '
+                        f'Contacte al administrador del sistema.'
+                    )
+                else:
+                    messages.error(
+                        request,
+                        f'❌ Error al enviar boleta: {result["message"]}'
+                    )
             
             # Respuesta inmediata al usuario
             messages.success(request, f'📧 La boleta está siendo procesada y se enviará a {email_cliente} en unos momentos...')

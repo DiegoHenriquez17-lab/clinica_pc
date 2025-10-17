@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.http import HttpResponse
+import csv
 from .models import Cliente, Estudiante, Equipo, TrazaEquipo
+from diagnostico.models import Diagnostico
+from entrega.models import Entrega
 
 
 @admin.register(Cliente)
@@ -34,6 +38,42 @@ class EquipoAdmin(admin.ModelAdmin):
 	search_fields = ("serial", "cliente__nombre", "tipo_equipo")
 	list_filter = ("estado", "tipo_equipo", "created_at")
 	readonly_fields = ("created_at", "updated_at")
+	list_select_related = ("cliente",)
+	actions = ["exportar_csv"]
+
+	class TrazaInline(admin.TabularInline):
+		model = TrazaEquipo
+		extra = 0
+		readonly_fields = ("usuario", "accion", "descripcion", "timestamp")
+		fields = ("usuario", "accion", "descripcion", "timestamp")
+
+	class DiagnosticoInline(admin.StackedInline):
+		model = Diagnostico
+		extra = 0
+		can_delete = False
+		fk_name = "equipo"
+		readonly_fields = ("cliente", "estudiante", "diagnostico", "area_recomendada", "prioridad", "costo_estimado", "created_at", "updated_at")
+		fields = ("cliente", "estudiante", "diagnostico", "area_recomendada", "prioridad", "costo_estimado", "created_at", "updated_at")
+
+	class EntregaInline(admin.StackedInline):
+		model = Entrega
+		extra = 0
+		can_delete = False
+		fk_name = "equipo"
+		readonly_fields = ("recibido_por", "documento_receptor", "observaciones_entrega", "cliente_satisfecho", "fecha_entrega", "responsable")
+		fields = ("recibido_por", "documento_receptor", "observaciones_entrega", "cliente_satisfecho", "fecha_entrega", "responsable")
+
+	inlines = [DiagnosticoInline, EntregaInline, TrazaInline]
+
+	def exportar_csv(self, request, queryset):
+		response = HttpResponse(content_type='text/csv')
+		response['Content-Disposition'] = 'attachment; filename="equipos.csv"'
+		writer = csv.writer(response)
+		writer.writerow(["ID", "Cliente", "Tipo", "Marca", "Modelo", "Serial", "Estado", "Creado"])
+		for e in queryset.select_related('cliente'):
+			writer.writerow([e.id, e.cliente.nombre if e.cliente else "", e.tipo_equipo, e.marca, e.modelo, e.serial, e.estado, e.created_at])
+		return response
+	exportar_csv.short_description = "Exportar seleccionados a CSV"
 
 
 @admin.register(TrazaEquipo)

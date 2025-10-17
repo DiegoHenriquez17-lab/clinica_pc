@@ -1,4 +1,29 @@
-# Virtual env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Envs
+.env
+.env.*
+venv/
+.venv/
+env/
+
+# Django
+*.log
+media/
+staticfiles/
+
+# Database (optional; tracked DBs won't be removed automatically)
+*.sqlite3
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db# Virtual env
 venv/
 ENV/
 env/

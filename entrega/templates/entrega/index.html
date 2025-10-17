@@ -176,7 +176,7 @@
     <div>
         <div id="dispatchFormContainer" class="bg-white rounded-xl shadow-md p-6 hidden">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Registrar Entrega</h3>
-            <form method="post" class="space-y-4">
+            <form method="post" class="space-y-4" id="formEntrega">
                 {% csrf_token %}
                 <input type="hidden" id="equipoId" name="equipo_id">
                 
@@ -199,6 +199,39 @@
                     <textarea name="observaciones_entrega" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                 </div>
 
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <label class="flex items-center mb-3">
+                        <input type="checkbox" id="chkTercero" name="requiere_confirmacion" value="1" class="mr-2" onchange="toggleTercero()">
+                        <span class="text-sm font-medium text-gray-700">Retiro por tercero (requiere confirmación del titular)</span>
+                    </label>
+                    <div id="terceroFields" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del receptor</label>
+                            <input type="text" id="receptorNombre" name="receptor_nombre" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Documento del receptor</label>
+                            <input type="text" id="receptorDocumento" name="receptor_documento" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="button" onclick="solicitarConfirmacion()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Enviar solicitud de confirmación</button>
+                            <span id="confirmStatus" class="ml-2 text-sm"></span>
+                        </div>
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ingresar código (6 dígitos)</label>
+                                <input type="text" id="codigoVerificacion" maxlength="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="000000">
+                            </div>
+                            <div>
+                                <button type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition" onclick="verificarCodigo()">Verificar código</button>
+                            </div>
+                            <div>
+                                <span id="badgeEstado" class="inline-block px-3 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Sin confirmar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <label class="flex items-center">
                         <input type="checkbox" name="cliente_satisfecho" value="1" checked class="mr-2">
@@ -206,7 +239,7 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition duration-200">
+                <button type="submit" id="btnConfirmarEntrega" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition duration-200">
                     <i class="fas fa-check-circle mr-2"></i>Confirmar Entrega
                 </button>
                 
@@ -246,6 +279,13 @@ function cancelarEntrega() {
     document.getElementById('dispatchFormContainer').classList.add('hidden');
     document.getElementById('dispatchPlaceholder').classList.remove('hidden');
     document.querySelector('form').reset();
+
+    // Reset UI de tercero
+    document.getElementById('terceroFields').classList.add('hidden');
+    document.getElementById('chkTercero').checked = false;
+    document.getElementById('confirmStatus').innerText = '';
+    actualizarBadge('none');
+    bloquearConfirmar(false); // por defecto sin tercero, botón habilitado
 }
 
 function mostrarFormularioEnvio(equipoId, action) {
@@ -293,6 +333,98 @@ function cancelarEnvio() {
     document.getElementById('sendBackPanel').classList.add('hidden');
     document.getElementById('dispatchPlaceholder').classList.remove('hidden');
     document.getElementById('sendBackForm').reset();
+}
+
+function toggleTercero() {
+    const chk = document.getElementById('chkTercero');
+    const fields = document.getElementById('terceroFields');
+    if (chk.checked) {
+        fields.classList.remove('hidden');
+        // Al activar tercero, requerimos confirmación => bloquear confirmar hasta aprobar
+        bloquearConfirmar(true);
+        // Consultar estado si ya existe solicitud
+        consultarEstado();
+    } else {
+        fields.classList.add('hidden');
+        bloquearConfirmar(false);
+    }
+}
+
+function solicitarConfirmacion() {
+    const equipoId = document.getElementById('equipoId').value;
+    const nombre = document.getElementById('receptorNombre').value.trim();
+    const doc = document.getElementById('receptorDocumento').value.trim();
+    const status = document.getElementById('confirmStatus');
+    if (!nombre || !doc) { alert('Complete nombre y documento del receptor.'); return; }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "entrega:solicitar_confirmacion" 0 %}'.replace('0', equipoId);
+    const csrf = document.querySelector('input[name="csrfmiddlewaretoken"]').cloneNode();
+    const i1 = document.createElement('input'); i1.name = 'receptor_nombre'; i1.value = nombre;
+    const i2 = document.createElement('input'); i2.name = 'receptor_documento'; i2.value = doc;
+    form.appendChild(csrf); form.appendChild(i1); form.appendChild(i2);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function consultarEstado() {
+    const equipoId = document.getElementById('equipoId').value;
+    fetch('{% url "entrega:estado_confirmacion" 0 %}'.replace('0', equipoId))
+        .then(r => r.json())
+        .then(d => {
+            if (!d.exists) { document.getElementById('confirmStatus').innerText = 'No hay solicitud enviada'; actualizarBadge('none'); return; }
+            document.getElementById('confirmStatus').innerText = `Estado: ${d.estado}`;
+            actualizarBadge(d.estado);
+            if (d.estado === 'aprobado') { bloquearConfirmar(false); }
+            else { bloquearConfirmar(true); }
+        })
+        .catch(() => {});
+}
+
+function verificarCodigo() {
+    const equipoId = document.getElementById('equipoId').value;
+    const codigo = document.getElementById('codigoVerificacion').value.trim();
+    if (!codigo) { alert('Ingrese el código de verificación.'); return; }
+    const formData = new FormData();
+    formData.append('codigo', codigo);
+    formData.append('csrfmiddlewaretoken', document.querySelector('input[name="csrfmiddlewaretoken"]').value);
+    fetch('{% url "entrega:verificar_codigo" 0 %}'.replace('0', equipoId), { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(d => {
+            if (d.ok) {
+                document.getElementById('confirmStatus').innerText = 'Estado: aprobado';
+                actualizarBadge('aprobado');
+                bloquearConfirmar(false);
+            } else {
+                document.getElementById('confirmStatus').innerText = d.message || 'Código inválido';
+                actualizarBadge('pendiente');
+                bloquearConfirmar(true);
+            }
+        })
+        .catch(() => {});
+}
+
+function actualizarBadge(estado) {
+    const badge = document.getElementById('badgeEstado');
+    if (!badge) return;
+    if (estado === 'aprobado') {
+        badge.className = 'inline-block px-3 py-2 rounded-full text-xs font-semibold bg-green-100 text-green-800';
+        badge.innerText = 'Confirmado';
+    } else if (estado === 'rechazado' || estado === 'expirado') {
+        badge.className = 'inline-block px-3 py-2 rounded-full text-xs font-semibold bg-red-100 text-red-800';
+        badge.innerText = estado === 'rechazado' ? 'Rechazado' : 'Expirado';
+    } else {
+        badge.className = 'inline-block px-3 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700';
+        badge.innerText = 'Sin confirmar';
+    }
+}
+
+function bloquearConfirmar(bloquear) {
+    const btn = document.getElementById('btnConfirmarEntrega');
+    if (!btn) return;
+    btn.disabled = bloquear;
+    btn.style.opacity = bloquear ? 0.6 : 1;
+    btn.style.cursor = bloquear ? 'not-allowed' : 'pointer';
 }
 </script>
 {% endblock %}

@@ -201,23 +201,25 @@
                                     </a>
                                 {% endif %}
                                 
-                                <!-- Botones de Administrador (Solo superusuarios) -->
-                                {% if user.is_superuser %}
+                                <!-- Botones de gestión (para staff) -->
+                                {% if user.is_staff %}
                                     <div class="border-l border-gray-200 pl-2 ml-2">
                                         <!-- Botón Actualizar -->
                                         <a href="{% url 'actualizar_equipo' equipo.id %}" 
                                            class="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded text-xs" 
-                                           title="Actualizar Equipo (Solo Admin)">
+                                           title="Actualizar Equipo">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         
-                                        <!-- Botón Eliminar -->
+                                        {% if can_delete %}
+                                        <!-- Botón Eliminar (solo admin o recepción) -->
                                         <a href="{% url 'eliminar_equipo' equipo.id %}" 
                                            class="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded text-xs ml-1" 
-                                           title="Eliminar Equipo (Solo Admin)"
+                                           title="Eliminar Equipo"
                                            onclick="return confirm('⚠️ ¿Estás seguro?\nEsta acción eliminará permanentemente el equipo.')">
                                             <i class="fas fa-trash"></i>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 {% endif %}
                             </div>

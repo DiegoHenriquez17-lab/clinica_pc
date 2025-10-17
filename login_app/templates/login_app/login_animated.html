@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clínica PC - Login Animado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scene { perspective: 1000px; }
+        .yeti { width: 160px; height: 160px; margin: 0 auto; position: relative; }
+        .yeti .head { width: 160px; height: 160px; background: #e9f2ff; border-radius: 50%; position: relative; box-shadow: inset 0 -8px 0 #cfe3ff; }
+        .yeti .face { position: absolute; inset: 0; display: grid; place-items: center; }
+        .eyes { position: absolute; top: 62px; left: 0; right: 0; display: flex; justify-content: center; gap: 36px; }
+        .eye { width: 28px; height: 28px; background: #fff; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 1px 0 #cbd5e1; }
+        .pupil { width: 12px; height: 12px; background: #0f172a; border-radius: 50%; position: absolute; top: 8px; left: 8px; transition: transform .06s linear; }
+        .mouth { position: absolute; top: 98px; left: 50%; transform: translateX(-50%); width: 44px; height: 20px; background: #1d4ed8; border-radius: 0 0 22px 22px; overflow: hidden; }
+        .tooth { position: absolute; top: 0; width: 8px; height: 8px; background: #fff; }
+        .tooth.t1 { left: 10px; }
+        .tooth.t2 { right: 10px; }
+        /* Hands */
+        .hands { position: absolute; top: 105px; left: 0; right: 0; display: flex; justify-content: center; gap: 85px; pointer-events: none; transition: transform .25s ease; }
+        .hand { width: 42px; height: 42px; background: #e9f2ff; border-radius: 20px; box-shadow: inset 0 -6px 0 #cfe3ff; transform-origin: top center; transition: transform .25s ease, top .25s ease; }
+        .cover-eyes .hand-left { transform: translate(-25px, -55px) rotate(-18deg); }
+        .cover-eyes .hand-right { transform: translate(25px, -55px) rotate(18deg); }
+        /* Subtle bounce on focus */
+        .cover-eyes .head { animation: bounce 0.45s ease; }
+        @keyframes bounce { 0%{transform: translateY(0)} 40%{transform: translateY(-4px)} 100%{transform: translateY(0)} }
+        /* Form styles */
+        .field { position: relative; }
+        .field input { outline: none; }
+        .field .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .field input { padding-left: 40px; }
+    </style>
+    {% load static %}
+    {% csrf_token %}
+    <script>
+        // This script runs after DOMContentLoaded at the bottom, kept here for visibility
+    </script>
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <link rel="icon" href="data:," />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'">
+    <!-- CSP above is relaxed for CDN Tailwind usage in dev; tighten in prod as needed -->
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-500 to-indigo-700 flex items-center justify-center py-10 px-4">
+    <div class="w-full max-w-md">
+        <div class="bg-white/90 backdrop-blur rounded-3xl shadow-2xl p-7 md:p-9">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 mx-auto grid place-items-center rounded-full bg-sky-100 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-10 h-10 text-sky-600"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-9 3h9M3 6h18M4 6l2 13a2 2 0 002 2h8a2 2 0 002-2l2-13" /></svg>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">Clínica PC</h1>
+                <p class="text-slate-500">Inicio de sesión</p>
+            </div>
+
+            <!-- Mascot -->
+            <div id="mascot" class="scene mb-6 select-none">
+                <div class="yeti" aria-hidden="true">
+                    <div class="head">
+                        <div class="face"></div>
+                        <div class="eyes">
+                            <div class="eye"><div class="pupil" id="pupilLeft"></div></div>
+                            <div class="eye"><div class="pupil" id="pupilRight"></div></div>
+                        </div>
+                        <div class="mouth">
+                            <div class="tooth t1"></div>
+                            <div class="tooth t2"></div>
+                        </div>
+                        <div class="hands">
+                            <div class="hand hand-left"></div>
+                            <div class="hand hand-right"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" action="" id="loginForm" class="space-y-4">
+                {% csrf_token %}
+                <div class="field">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 0a5 5 0 100 10A5 5 0 0010 0zM2 18a8 8 0 1116 0H2z"/></svg>
+                    </span>
+                    <input type="text" name="usuario" id="usuario" autocomplete="username" placeholder="Usuario" required class="w-full border border-slate-300 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent" />
+                </div>
+                <div class="field">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V6a5 5 0 00-5-5zm-3 8V6a3 3 0 016 0v3H9z"/></svg>
+                    </span>
+                    <input type="password" name="clave" id="clave" autocomplete="current-password" placeholder="Contraseña" required class="w-full border border-slate-300 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent" />
+                </div>
+                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-lg">Iniciar sesión</button>
+            </form>
+
+            <p class="mt-5 text-center text-sm text-slate-500">
+                ¿Prefieres el login clásico? <a href="{% url 'login_app:login' %}" class="text-sky-600 hover:underline">Ir al original</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        const mascot = document.getElementById('mascot');
+        const pupilL = document.getElementById('pupilLeft');
+        const pupilR = document.getElementById('pupilRight');
+        const password = document.getElementById('clave');
+
+        // Eyes follow cursor inside the card
+        const maxOffset = 6; // px
+        function movePupils(e){
+            const rect = mascot.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2 - 12; // slight bias up to eyes
+            const dx = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width/2)));
+            const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height/2)));
+            const tx = dx * maxOffset;
+            const ty = dy * maxOffset;
+            pupilL.style.transform = `translate(${tx}px, ${ty}px)`;
+            pupilR.style.transform = `translate(${tx}px, ${ty}px)`;
+        }
+        document.addEventListener('mousemove', movePupils);
+
+        // Cover eyes on password focus
+        function cover(){ mascot.classList.add('cover-eyes'); }
+        function uncover(){ mascot.classList.remove('cover-eyes'); }
+        password.addEventListener('focus', cover);
+        password.addEventListener('blur', uncover);
+
+        // Also cover while typing to feel responsive
+        password.addEventListener('input', ()=> mascot.classList.add('cover-eyes'));
+    })();
+    </script>
+    
+</body>
+</html>
