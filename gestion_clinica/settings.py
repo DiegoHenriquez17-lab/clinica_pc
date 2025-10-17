@@ -104,31 +104,26 @@ WSGI_APPLICATION = 'gestion_clinica.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Configuración de base de datos
-# Para desarrollo local usa SQLite, para producción PostgreSQL
-import os
+# Configuración de base de datos (cumple rúbrica: PostgreSQL por variables de entorno; fallback SQLite)
+DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').lower()  # valores: 'postgres' | 'sqlite'
 
-if os.environ.get('USE_SQLITE', 'True') == 'True':
-    # SQLite para desarrollo local (más rápido y confiable)
+if DB_ENGINE == 'postgres':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'clinica_pc'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {**({'sslmode': os.getenv('DB_SSLMODE', 'prefer')} if os.getenv('DB_SSLMODE') else {})},
+        }
+    }
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    # PostgreSQL para producción
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'neondb',
-            'USER': 'neondb_owner',
-            'PASSWORD': 'npg_sOVY35FJMXxL',
-            'HOST': 'ep-late-band-aci2kkoj-pooler.sa-east-1.aws.neon.tech',
-            'PORT': '5432',
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
         }
     }
 
