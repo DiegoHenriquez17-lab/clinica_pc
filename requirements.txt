@@ -14,3 +14,5 @@ tzdata==2025.2
 webdriver-manager==3.8.6
 weasyprint==63.1
 xhtml2pdf==0.2.16
+# PostgreSQL driver for Django (psycopg 3). Keep alongside psycopg2-binary for compatibility.
+psycopg[binary]>=3.1
