@@ -22,9 +22,19 @@ pip install -r requirements.txt
 ```
 
 ### 3. Configurar Base de Datos
+Antes de migrar, crea un archivo `.env` a partir de `.env.example` y completa las variables para PostgreSQL:
+
+```
+DB_ENGINE=postgres
+DB_NAME=clinica_pc
+DB_USER=postgres
+DB_PASSWORD=tu-password
+DB_HOST=127.0.0.1
+DB_PORT=5432
+```
 ```bash
 python manage.py migrate
-python manage.py shell -c "exec(open('setup_roles_complete.py').read())"
+python manage.py shell -c "exec(open('scripts/operations/setup_roles_complete.py').read())"
 ```
 
 ### 4. Ejecutar
