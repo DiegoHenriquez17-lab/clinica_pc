@@ -3,7 +3,6 @@ Django==5.2.6
 pdfkit==1.0.0
 Pillow==11.3.0
 playwright==1.49.1
-psycopg2-binary==2.9.9
 django-extensions==3.2.3
 python-dotenv==1.0.0
 requests==2.31.0
@@ -14,5 +13,9 @@ tzdata==2025.2
 webdriver-manager==3.8.6
 weasyprint==63.1
 xhtml2pdf==0.2.16
-# PostgreSQL driver for Django (psycopg 3). Keep alongside psycopg2-binary for compatibility.
+# PostgreSQL driver for Django (psycopg 3). Use this instead of psycopg2-binary to avoid compiler/toolchain issues on Windows.
 psycopg[binary]>=3.1
+
+# Notes for Windows developers:
+# - Prefer Python 3.12 for prebuilt wheels of dependencies (3.13+ may lack some wheels).
+# - psycopg2-binary was removed intentionally; psycopg 3 is the supported driver.

@@ -21,20 +21,34 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
-### 3. Configurar Base de Datos
-Antes de migrar, crea un archivo `.env` a partir de `.env.example` y completa las variables para PostgreSQL:
+### 3. Configurar Base de Datos (PostgreSQL)
+Clona el archivo `.env` de ejemplo y ajústalo:
+
+```bash
+copy .env.example .env   # Windows
+notepad .env
+```
+
+Valores mínimos recomendados para local:
 
 ```
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+EMAIL_PROVIDER=console
+
 DB_ENGINE=postgres
 DB_NAME=clinica_pc
-DB_USER=postgres
-DB_PASSWORD=tu-password
+DB_USER=clinica_user
+DB_PASSWORD=Inacap2025
 DB_HOST=127.0.0.1
 DB_PORT=5432
 ```
+
+Luego inicializa la base de datos:
+
 ```bash
 python manage.py migrate
-python manage.py shell -c "exec(open('scripts/operations/setup_roles_complete.py').read())"
+python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u,created=U.objects.get_or_create(username='admin', defaults={'is_superuser':True,'is_staff':True}); u.set_password('Inacap2025'); u.save(); print('ADMIN OK')"
 ```
 
 ### 4. Ejecutar
@@ -48,7 +62,7 @@ python manage.py runserver
 
 | Usuario | Contraseña | Rol |
 |---------|------------|-----|
-| `admin` | `admin123` | Administrador completo |
+| `admin` | `Inacap2025` | Administrador completo |
 | `recepcion` | `admin123` | Recepción de equipos |
 | `diagnostico` | `admin123` | Diagnósticos |
 | `tecnico_hardware` | `admin123` | Reparaciones hardware |
