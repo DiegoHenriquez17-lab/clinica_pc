@@ -40,12 +40,59 @@ Verificar Django instalado:
 python -m pip show Django
 ```
 
-## 🗄️ 4. Crear la base de datos en PostgreSQL
-1. Abrir pgAdmin4
-2. Clic derecho en Databases → Create → Database
-3. Nombre: `clinica_pc`
-4. Owner: `postgres`
-5. Guardar
+## 🗄️ 4. Configurar PostgreSQL correctamente (Opción A – Recomendado)
+
+Para que Django pueda conectarse a PostgreSQL sin problemas, se debe crear un usuario dedicado y asignarle permisos sobre la base de datos del proyecto.
+A continuación, se detallan los pasos que se realizaron en pgAdmin4, junto con su configuración ideal.
+
+### 🔹 1. Crear el usuario del sistema (rol de conexión)
+
+En el panel izquierdo de pgAdmin4, expande tu servidor (por ejemplo, PostgreSQL 18).
+
+Clic derecho sobre Login/Group Roles → Create → Login/Group Role...
+
+En la pestaña General, escribe:
+
+Name: `clinica_user`
+
+En la pestaña Definition, define la contraseña (por ejemplo):
+
+Password: `Inacap2025`
+
+En la pestaña Privileges, deja activado únicamente:
+
+✅ Can login? → Sí
+
+❌ Todo lo demás (Superuser, Create roles, Create databases, etc.)
+
+Clic en Save.
+
+🧠 Esto crea un usuario normal (no superusuario) que puede iniciar sesión, ideal para Django.
+
+### 🔹 2. Crear la base de datos del proyecto
+
+En el panel izquierdo, clic derecho sobre Databases → Create → Database...
+
+En la pestaña General, escribe:
+
+Database name: `clinica_pc`
+
+Owner: `clinica_user` (selecciona el usuario creado en el paso anterior)
+
+Clic en Save.
+
+📘 De esta forma, clinica_user es el dueño total de la base de datos clinica_pc y podrá crear/modificar tablas sin necesidad de permisos extra.
+
+### 🔹 3. Verificar configuración
+
+En Object Explorer → Databases → clinica_pc → Properties, debe aparecer:
+Owner: `clinica_user`
+
+En Object Explorer → Login/Group Roles → clinica_user → Privileges, deben estar activadas solo:
+
+✅ Can login?
+
+✅ Inherit rights from the parent roles?
 
 ## ⚙️ 5. Configurar archivo .env
 Crear el archivo .env en la raíz del proyecto:
