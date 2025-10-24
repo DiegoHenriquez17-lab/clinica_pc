@@ -1,93 +1,105 @@
-# 🖥️ Clínica PC - Sistema de Gestión Técnica
+Link evaluacion2: https://github.com/DiegoHenriquez17-lab/clinica_pc.git
+Nombres: Diego Henriquez, Gabriel ruiz
 
-Sistema completo de gestión para servicios técnicos de computadoras con roles específicos, seguimiento de equipos, diagnósticos y documentación completa.
+# Guía de Instalación y Ejecución del Proyecto – Clínica PC
 
-## 🚀 Instalación Rápida
+## Requisitos previos
+• Python 3.12 == https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe
+• Git
+• PostgreSQL / pgAdmin4
+• Visual Studio Code (opcional, pero recomendado)
 
-### 1. Clonar el Repositorio
-```bash
+## 1. Clonar el repositorio
+Abrir la terminal (CMD) y ejecutar:
+```cmd
+cd C:\Users\diego\Downloads
 git clone https://github.com/DiegoHenriquez17-lab/clinica_pc.git
 cd clinica_pc
 ```
 
-### 2. Instalar Dependencias
-```bash
-# Crear entorno virtual (recomendado)
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # macOS/Linux
-
-# Instalar paquetes
-pip install -r requirements.txt
+## 2. Crear y activar entorno virtual
+Dentro de la carpeta del proyecto, crear el entorno virtual:
+```cmd
+py -3.12 -m venv venv
+venv\Scripts\activate
+```
+Puedes confirmar con:
+```cmd
+where python
+python -c "import sys; print(sys.executable)"
 ```
 
-### 3. Configurar Base de Datos (PostgreSQL)
-Clona el archivo `.env` de ejemplo y ajústalo:
+## 3. Instalar dependencias
+Instalar las librerías necesarias para el proyecto:
+```cmd
+python -m pip install -U pip setuptools wheel
+python -m pip install -r requirements.txt
+```
+Verificar Django instalado:
+```cmd
+python -m pip show Django
+```
 
-```bash
-copy .env.example .env   # Windows
+## 🗄️ 4. Crear la base de datos en PostgreSQL
+1. Abrir pgAdmin4
+2. Clic derecho en Databases → Create → Database
+3. Nombre: `clinica_pc`
+4. Owner: `postgres`
+5. Guardar
+
+## ⚙️ 5. Configurar archivo .env
+Crear el archivo .env en la raíz del proyecto:
+```cmd
 notepad .env
 ```
 
-Valores mínimos recomendados para local:
+Pegar el siguiente contenido (ajustar contraseña si es necesario):
+**Adaptación de cada usuario**
 
 ```
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
-EMAIL_PROVIDER=console
-
 DB_ENGINE=postgres
 DB_NAME=clinica_pc
-DB_USER=clinica_user
-DB_PASSWORD=Inacap2025
+DB_USER=postgres
+DB_PASSWORD=tu_contraseña
 DB_HOST=127.0.0.1
 DB_PORT=5432
+EMAIL_PROVIDER=console
 ```
 
-Luego inicializa la base de datos:
-
-```bash
+## 🧩 6. Aplicar migraciones
+Ejecutar las migraciones del proyecto:
+```cmd
 python manage.py migrate
-python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u,created=U.objects.get_or_create(username='admin', defaults={'is_superuser':True,'is_staff':True}); u.set_password('Inacap2025'); u.save(); print('ADMIN OK')"
 ```
 
-### 4. Ejecutar
-```bash
+Si aparece:
+```
+No migrations to apply.
+```
+Significa que todas las migraciones están correctas y la base de datos está lista.
+
+## 👤 7. Crear superusuario
+Crear el usuario administrador para ingresar al panel /admin/:
+```cmd
+python manage.py createsuperuser
+```
+Ejemplo:
+```
+Username: admin
+Email address: admin@correo.com
+Password: Inacap2025
+Password (again): Inacap2025
+```
+
+## 🚀 8. Ejecutar el servidor
+Iniciar el servidor de desarrollo:
+```cmd
 python manage.py runserver
 ```
 
-🎉 **¡Listo!** Visita: http://127.0.0.1:8000/
-
-## 🔑 Credenciales de Acceso
-
-| Usuario | Contraseña | Rol |
-|---------|------------|-----|
-| `admin` | `Inacap2025` | Administrador completo |
-| `recepcion` | `admin123` | Recepción de equipos |
-| `diagnostico` | `admin123` | Diagnósticos |
-| `tecnico_hardware` | `admin123` | Reparaciones hardware |
-| `tecnico_software` | `admin123` | Reparaciones software |
-| `despacho` | `admin123` | Entrega de equipos |
-
-## 🎯 Características Principales
-
-### ✅ Sistema de Roles
-- **6 tipos de usuarios** con permisos específicos
-- **Navegación condicional** según el rol del usuario
-- **Protección de vistas** con decoradores personalizados
-
-### ✅ Gestión Completa de Equipos
-- **Recepción:** Registro con imagen de carnet del cliente
-- **Diagnóstico:** Evaluación técnica y derivación por áreas
-- **Reparación:** Separación hardware/software con técnicos especializados
-- **Entrega:** Control de despacho y documentación
-
-### ✅ Funcionalidades de Seguridad
-- **Imágenes de carnet** de clientes por seguridad
-- **Trazabilidad completa** del equipo desde ingreso hasta entrega
-- **Historial detallado** de todas las acciones realizadas
-
-### ✅ Documentación Integrada
-- **Boletas completas** con toda la información
-- **Impresión optimizada** para documentos oficiales
-- **Vista de cliente** con historial y estadísticas
+O, si el sistema no reconoce Django (raro, pero seguro):
+```cmd
+.\venv\Scripts\python manage.py runserver
+```
