@@ -121,6 +121,12 @@
                         <i class="fas fa-database w-6 mr-3 text-gray-700"></i>
                         <span class="font-medium">Base de Datos</span>
                     </a>
+                    {% if request.session.db_pin_ok %}
+                    <a href="{% url 'db_logout' %}" class="nav-btn w-full text-left px-4 py-2 rounded-lg hover:bg-red-50 transition duration-200 flex items-center text-red-700">
+                        <i class="fas fa-lock w-6 mr-3"></i>
+                        <span class="font-medium">Cerrar acceso BD</span>
+                    </a>
+                    {% endif %}
                     {% if user.is_superuser %}
                     <a href="/djadmin/" class="nav-btn mt-1 w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 transition duration-200 flex items-center">
                         <i class="fas fa-toolbox w-6 mr-3 text-gray-600"></i>

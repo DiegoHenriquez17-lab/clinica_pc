@@ -322,6 +322,21 @@ def db_login(request):
     return render(request, 'db/login.html', context)
 
 
+@login_required
+def db_logout(request):
+    """Cerrar acceso (PIN) a la sección Base de Datos."""
+    if not request.user.is_staff:
+        return HttpResponseForbidden("No autorizado")
+    if request.session.get(DB_PIN_SESSION_KEY):
+        try:
+            del request.session[DB_PIN_SESSION_KEY]
+        except KeyError:
+            pass
+        messages.info(request, 'Acceso a Base de Datos cerrado.')
+    # Volver a dashboard o a login de BD según preferencia
+    return redirect('dashboard')
+
+
 def _db_models_config():
     """Mapa de modelos disponibles en el explorador."""
     return {

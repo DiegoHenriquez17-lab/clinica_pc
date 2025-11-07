@@ -3,11 +3,18 @@
 {% block title %}Base de Datos - Clínica PC{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <h2 class="text-3xl font-bold text-gray-800">Base de Datos</h2>
-    <p class="text-gray-600 mt-1">Vista general similar a pgAdmin: tablas y conteos</p>
-    <p class="text-xs text-gray-500 mt-1">Admin real disponible en <code class="bg-gray-100 px-1 rounded">/djadmin/</code></p>
+<div class="mb-6 flex items-start justify-between">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-800">Base de Datos</h2>
+        <p class="text-gray-600 mt-1">Vista general similar a pgAdmin: tablas y conteos</p>
+        <p class="text-xs text-gray-500 mt-1">Admin real disponible en <code class="bg-gray-100 px-1 rounded">/djadmin/</code></p>
     </div>
+    <div class="flex items-center gap-2">
+        <a href="{% url 'db_logout' %}" class="px-3 py-2 text-sm rounded-md border border-red-200 text-red-700 hover:bg-red-50">
+            <i class="fas fa-lock mr-1"></i>Cerrar acceso BD
+        </a>
+    </div>
+</div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for s in stats %}
