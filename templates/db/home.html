@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Base de Datos - Clínica PC{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-3xl font-bold text-gray-800">Base de Datos</h2>
+    <p class="text-gray-600 mt-1">Vista general similar a pgAdmin: tablas y conteos</p>
+    <p class="text-xs text-gray-500 mt-1">Admin real disponible en <code class="bg-gray-100 px-1 rounded">/djadmin/</code></p>
+    </div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for s in stats %}
+    <a href="{% url 'db_model_list' s.key %}" class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition block">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-sm font-medium">{{ s.title }}</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ s.count }}</p>
+            </div>
+            <div class="bg-blue-100 rounded-full p-4">
+                <i class="fas fa-database text-2xl text-blue-600"></i>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

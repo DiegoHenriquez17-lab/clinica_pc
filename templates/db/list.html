@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Base de Datos{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-3xl font-bold text-gray-800">{{ title }}</h2>
+    <p class="text-gray-600 mt-1">Listado con búsqueda, orden y paginación</p>
+</div>
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <form method="get" class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-64">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-search mr-1"></i>Buscar
+                </label>
+                <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Buscar..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Orden</label>
+                <select name="order" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    {% for col in columns %}
+                        <option value="{{ col }}" {% if order == col %}selected{% endif %}>↑ {{ col }}</option>
+                        <option value="-{{ col }}" {% if order == '-'|add:col %}selected{% endif %}>↓ {{ col }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm">
+                    <i class="fas fa-search mr-1"></i>Aplicar
+                </button>
+                <a href="?" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm">
+                    <i class="fas fa-times mr-1"></i>Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full table-fixed">
+            <colgroup>
+                {# Primera columna (ID) angosta #}
+                <col style="width: 6rem;">
+                {# Columnas intermedias auto #}
+                {% for col in columns %}
+                    {% if not forloop.first %}
+                        <col>
+                    {% endif %}
+                {% endfor %}
+                {# Acciones angosta #}
+                <col style="width: 6rem;">
+            </colgroup>
+            <thead class="bg-gray-50">
+                <tr>
+                    {% for col in columns %}
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider {% if forloop.first %}text-right{% endif %}">{{ col }}</th>
+                    {% endfor %}
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for row in rows %}
+                <tr class="hover:bg-gray-50">
+                    {% for val in row.vals %}
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 {% if forloop.first %}text-right tabular-nums{% endif %}">
+                            <span class="block truncate">{{ val|default_if_none:'—' }}</span>
+                        </td>
+                    {% endfor %}
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                        <a href="{% url 'db_model_detail' model_key row.pk %}" class="text-blue-600 hover:text-blue-900">Ver</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{{ columns|length|add:1 }}" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-2"></i>
+                        <p>Sin resultados</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+        <div class="text-sm text-gray-600">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</div>
+        <div class="space-x-2">
+            {% if page_obj.has_previous %}
+                <a class="px-3 py-1 border rounded" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&order={{ order }}">Anterior</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a class="px-3 py-1 border rounded" href="?page={{ page_obj.next_page_number }}&q={{ q }}&order={{ order }}">Siguiente</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

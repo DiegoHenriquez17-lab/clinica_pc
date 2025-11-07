@@ -9,6 +9,9 @@ from django.utils import timezone
 from datetime import timedelta
 from recepcion.forms import EquipoForm, ClienteForm
 from django.contrib.auth.models import Group
+from django.core.paginator import Paginator
+from django.http import HttpResponseForbidden
+from functools import wraps
 
 
 class DashboardView(TemplateView):
@@ -258,3 +261,224 @@ def eliminar_cliente(request, cliente_id):
         'accion': 'eliminar_cliente',
     }
     return render(request, 'admin/confirmar_eliminar_cliente.html', context)
+
+
+# ==============================
+# Admin redirect y Explorador DB
+# ==============================
+@login_required
+def admin_redirect(request):
+    """Reemplaza /admin/ por el panel/dashboard o el explorador de BD."""
+    # Si es staff, lo llevamos al explorador de BD; si no, al dashboard.
+    if request.user.is_staff:
+        return redirect('db_home')
+    return redirect('dashboard')
+
+
+# =======================
+# Protección extra por PIN
+# =======================
+DB_PIN_SESSION_KEY = 'db_pin_ok'
+DB_PIN_VALUE = 'Inacap2025'
+
+
+def require_db_pin(view_func):
+    """Decorator: requiere PIN de Base de Datos almacenado en sesión.
+    Se suma al requisito de is_staff ya presente.
+    """
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_staff:
+            return HttpResponseForbidden("No autorizado")
+        if not request.session.get(DB_PIN_SESSION_KEY, False):
+            # Guardar destino para volver luego del login PIN
+            next_url = request.get_full_path()
+            return redirect(f"/panel/db/login/?next={next_url}")
+        return view_func(request, *args, **kwargs)
+    return _wrapped
+
+
+@login_required
+def db_login(request):
+    """Pequeño login por PIN para acceder a la sección Base de Datos."""
+    if not request.user.is_staff:
+        return HttpResponseForbidden("No autorizado")
+
+    # Si ya tiene PIN válido en sesión, redirigir a destino
+    if request.session.get(DB_PIN_SESSION_KEY, False):
+        return redirect(request.GET.get('next') or 'db_home')
+
+    error = None
+    if request.method == 'POST':
+        pin = request.POST.get('pin', '').strip()
+        if pin == DB_PIN_VALUE:
+            request.session[DB_PIN_SESSION_KEY] = True
+            messages.success(request, 'Acceso a Base de Datos concedido.')
+            return redirect(request.POST.get('next') or 'db_home')
+        else:
+            error = 'PIN incorrecto.'
+
+    context = { 'next': request.GET.get('next', '') , 'error': error }
+    return render(request, 'db/login.html', context)
+
+
+def _db_models_config():
+    """Mapa de modelos disponibles en el explorador."""
+    return {
+        'clientes': {
+            'model': Cliente,
+            'title': 'Clientes',
+            'columns': ['id', 'nombre', 'rut', 'correo', 'telefono', 'created_at'],
+            'search': ['nombre__icontains', 'rut__icontains', 'correo__icontains', 'telefono__icontains'],
+            'default_order': '-id',
+        },
+        'equipos': {
+            'model': Equipo,
+            'title': 'Equipos',
+            'columns': ['id', 'cliente__nombre', 'tipo_equipo', 'marca', 'modelo', 'serial', 'estado', 'created_at'],
+            'search': ['id__icontains', 'cliente__nombre__icontains', 'cliente__rut__icontains', 'tipo_equipo__icontains', 'marca__icontains', 'modelo__icontains', 'serial__icontains', 'problema__icontains'],
+            'default_order': '-id',
+        },
+        'diagnosticos': {
+            'model': Diagnostico,
+            'title': 'Diagnósticos',
+            'columns': ['id', 'equipo__id', 'cliente__nombre', 'area_recomendada', 'prioridad', 'costo_estimado', 'created_at'],
+            'search': ['equipo__id__icontains', 'cliente__nombre__icontains', 'prioridad__icontains', 'diagnostico__icontains'],
+            'default_order': '-id',
+        },
+        'hardware': {
+            'model': ReparacionHardware,
+            'title': 'Reparaciones Hardware',
+            'columns': ['id', 'diagnostico__equipo__id', 'diagnostico__cliente__nombre', 'completado', 'costo_final', 'fecha_inicio', 'fecha_completado'],
+            'search': ['diagnostico__equipo__id__icontains', 'diagnostico__cliente__nombre__icontains', 'trabajo_realizado__icontains'],
+            'default_order': '-id',
+        },
+        'software': {
+            'model': ReparacionSoftware,
+            'title': 'Reparaciones Software',
+            'columns': ['id', 'diagnostico__equipo__id', 'diagnostico__cliente__nombre', 'completado', 'costo_final', 'fecha_inicio', 'fecha_completado'],
+            'search': ['diagnostico__equipo__id__icontains', 'diagnostico__cliente__nombre__icontains', 'trabajo_realizado__icontains', 'software_instalado__icontains'],
+            'default_order': '-id',
+        },
+        'trazas': {
+            'model': TrazaEquipo,
+            'title': 'Trazabilidad',
+            'columns': ['id', 'equipo__id', 'equipo__cliente__nombre', 'accion', 'usuario__username', 'timestamp'],
+            'search': ['equipo__id__icontains', 'equipo__cliente__nombre__icontains', 'accion__icontains', 'descripcion__icontains', 'usuario__username__icontains'],
+            'default_order': '-id',
+        },
+    }
+
+
+@login_required
+@require_db_pin
+def db_home(request):
+
+    cfg = _db_models_config()
+    stats = []
+    for key, meta in cfg.items():
+        model = meta['model']
+        stats.append({
+            'key': key,
+            'title': meta['title'],
+            'count': model.objects.count(),
+        })
+    context = { 'stats': stats }
+    return render(request, 'db/home.html', context)
+
+
+@login_required
+@require_db_pin
+def db_model_list(request, model_key):
+
+    cfg = _db_models_config()
+    if model_key not in cfg:
+        messages.error(request, 'Modelo no disponible')
+        return redirect('db_home')
+
+    meta = cfg[model_key]
+    model = meta['model']
+    columns = meta['columns']
+
+    qs = model.objects.all()
+    q = request.GET.get('q', '').strip()
+    if q:
+        q_obj = Q()
+        for field in meta['search']:
+            q_obj |= Q(**{field: q})
+        qs = qs.filter(q_obj)
+
+    order = request.GET.get('order', meta['default_order'])
+    # Validación simple de order por seguridad
+    if order.lstrip('-') not in [c.split('__')[0] if '__' in c else c for c in columns]:
+        order = meta['default_order']
+    qs = qs.order_by(order)
+
+    paginator = Paginator(qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Construir filas amigables para la plantilla (resuelve relaciones con __)
+    def resolve_attr(obj, path):
+        try:
+            parts = path.split('__')
+            val = obj
+            for p in parts:
+                val = getattr(val, p)
+                if callable(val):
+                    val = val()
+                if val is None:
+                    return ''
+            return val
+        except Exception:
+            return ''
+
+    rows = []
+    for obj in page_obj.object_list:
+        rows.append({
+            'pk': obj.pk,
+            'vals': [resolve_attr(obj, col) for col in columns],
+        })
+
+    context = {
+        'model_key': model_key,
+        'title': meta['title'],
+        'columns': columns,
+        'page_obj': page_obj,
+        'rows': rows,
+        'order': order,
+        'q': q,
+    }
+    return render(request, 'db/list.html', context)
+
+
+@login_required
+@require_db_pin
+def db_model_detail(request, model_key, pk):
+
+    cfg = _db_models_config()
+    if model_key not in cfg:
+        messages.error(request, 'Modelo no disponible')
+        return redirect('db_home')
+
+    meta = cfg[model_key]
+    obj = get_object_or_404(meta['model'], pk=pk)
+
+    # Preparar representación de campos
+    fields = []
+    for field in obj._meta.get_fields():
+        if field.many_to_many or field.one_to_many:
+            continue
+        try:
+            val = getattr(obj, field.name)
+        except Exception:
+            continue
+        fields.append({ 'name': field.name, 'value': val })
+
+    context = {
+        'model_key': model_key,
+        'title': meta['title'],
+        'obj': obj,
+        'fields': fields,
+    }
+    return render(request, 'db/detail.html', context)

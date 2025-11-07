@@ -23,7 +23,9 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Redirigir /admin/ al nuevo Explorador de Datos y mantener Django Admin en /djadmin/
+    path('admin/', views.admin_redirect, name='admin_redirect'),
+    path('djadmin/', admin.site.urls),
     path('dashboard/', login_required(views.DashboardView.as_view()), name='dashboard'),
     path('boleta/<int:equipo_id>/', views.generar_boleta, name='generar_boleta'),
     
@@ -36,6 +38,11 @@ urlpatterns = [
     path("diagnostico/", include("diagnostico.urls")),
     path("entrega/", include("entrega.urls")),
     path("", include("login_app.urls")),
+    # Explorador de Base de Datos (estilo panel)
+    path('panel/db/login/', views.db_login, name='db_login'),
+    path('panel/db/', views.db_home, name='db_home'),
+    path('panel/db/<str:model_key>/', views.db_model_list, name='db_model_list'),
+    path('panel/db/<str:model_key>/<int:pk>/', views.db_model_detail, name='db_model_detail'),
 ]
 
 # Servir archivos multimedia en desarrollo
