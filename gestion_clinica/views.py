@@ -3,7 +3,7 @@ from django.db.models import Count, Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from recepcion.models import Equipo, TrazaEquipo
+from recepcion.models import Equipo, TrazaEquipo, Cliente
 from diagnostico.models import Diagnostico, ReparacionHardware, ReparacionSoftware
 from django.utils import timezone
 from datetime import timedelta
@@ -202,11 +202,12 @@ def actualizar_equipo(request, equipo_id):
             equipo_form.save()
             cliente_form.save()
 
-            # Crear registro en traza
+            # Crear registro en traza (usar una clave válida del choice y detalle en descripcion)
             TrazaEquipo.objects.create(
                 equipo=equipo,
                 usuario=request.user,
-                accion=f"Información actualizada por: {request.user.username}"
+                accion='observacion',
+                descripcion=f"Información actualizada por {request.user.username}"
             )
 
             messages.success(request, f"Equipo #{equipo_id} actualizado correctamente.")
@@ -226,3 +227,34 @@ def actualizar_equipo(request, equipo_id):
         'cliente_form': cliente_form,
     }
     return render(request, 'admin/actualizar_equipo.html', context)
+
+
+@login_required
+def eliminar_cliente(request, cliente_id):
+    """Eliminar cliente y sus equipos relacionados.
+    Restringido a admin o grupo 'recepcion'.
+    """
+    if not request.user.is_staff:
+        messages.error(request, "No tienes permisos para realizar esta acción.")
+        return redirect('dashboard')
+
+    if not (request.user.is_superuser or request.user.groups.filter(name='recepcion').exists()):
+        messages.error(request, "Solo administradores o recepción pueden eliminar clientes.")
+        return redirect('dashboard')
+
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    equipos_count = cliente.equipos.count()
+
+    if request.method == 'POST':
+        nombre = cliente.nombre
+        rut = cliente.rut or 'sin RUT'
+        cliente.delete()  # CASCADE eliminará equipos asociados
+        messages.success(request, f"Cliente '{nombre}' ({rut}) eliminado correctamente. Se eliminaron {equipos_count} equipos asociados.")
+        return redirect('dashboard')
+
+    context = {
+        'cliente': cliente,
+        'equipos_count': equipos_count,
+        'accion': 'eliminar_cliente',
+    }
+    return render(request, 'admin/confirmar_eliminar_cliente.html', context)

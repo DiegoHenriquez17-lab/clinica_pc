@@ -108,7 +108,11 @@
                                 {{ diagnostico.get_prioridad_display }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-4">
+                            <button type="button" class="text-green-600 hover:text-green-800" title="Ver detalle"
+                                    onclick="mostrarDetalleRecepcion({{ diagnostico.equipo.id }})">
+                                <i class="fas fa-eye"></i>
+                            </button>
                             <form method="post" class="inline">
                                 {% csrf_token %}
                                 <input type="hidden" name="diagnostico_id" value="{{ diagnostico.id }}">
@@ -130,4 +134,40 @@
         </table>
     </div>
 </div>
+
+<!-- Modal de detalles reutilizado -->
+<div id="modalDetalleRecepcion" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>Detalle de Recepción
+                    </h3>
+                    <button onclick="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="contenidoDetalleRecepcion" class="p-6"></div>
+        </div>
+    </div>
+    </div>
+
+<script>
+function mostrarDetalleRecepcion(equipoId) {
+    document.getElementById('modalDetalleRecepcion').classList.remove('hidden');
+    fetch(`/recepcion/detalle/${equipoId}/`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('contenidoDetalleRecepcion').innerHTML = data.success ? data.html : '<div class="text-center text-red-600">Error al cargar los detalles</div>';
+        })
+        .catch(() => {
+            document.getElementById('contenidoDetalleRecepcion').innerHTML = '<div class="text-center text-red-600">Error de conexión</div>';
+        });
+}
+function cerrarModalDetalle(){
+    document.getElementById('modalDetalleRecepcion').classList.add('hidden');
+}
+</script>
 {% endblock %}

@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import importlib.util
+import logging
+import warnings
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -108,6 +112,20 @@ WSGI_APPLICATION = 'gestion_clinica.wsgi.application'
 DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').lower()  # valores: 'postgres' | 'sqlite'
 
 if DB_ENGINE == 'postgres':
+    def _ensure_postgres_driver() -> str:
+        """Return the first available PostgreSQL driver or raise an explicit error."""
+
+        for driver in ('psycopg', 'psycopg2'):
+            if importlib.util.find_spec(driver):
+                return driver
+
+        raise ImproperlyConfigured(
+            "Se configuró DB_ENGINE=postgres pero no se encontró el controlador de PostgreSQL. "
+            "Instala la dependencia ejecutando 'pip install psycopg[binary]' (o 'pip install -r requirements.txt'). "
+            "Como alternativa temporal para desarrollo local, establece DB_ENGINE=sqlite en tu archivo .env."
+        )
+
+    POSTGRES_DRIVER = _ensure_postgres_driver()
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -126,7 +144,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

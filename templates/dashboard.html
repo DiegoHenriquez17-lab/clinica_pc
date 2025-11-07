@@ -219,6 +219,13 @@
                                            onclick="return confirm('⚠️ ¿Estás seguro?\nEsta acción eliminará permanentemente el equipo.')">
                                             <i class="fas fa-trash"></i>
                                         </a>
+                                        <!-- Botón Eliminar Cliente (impacta todos sus equipos) -->
+                                        <a href="{% url 'eliminar_cliente' equipo.cliente.id %}"
+                                           class="text-rose-600 hover:text-rose-900 hover:bg-rose-50 px-2 py-1 rounded text-xs ml-1"
+                                           title="Eliminar Cliente y sus equipos"
+                                           onclick="return confirm('⚠️ Esta acción eliminará al cliente y TODOS sus equipos asociados. ¿Confirmar?')">
+                                            <i class="fas fa-user-slash"></i>
+                                        </a>
                                         {% endif %}
                                     </div>
                                 {% endif %}

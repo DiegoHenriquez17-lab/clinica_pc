@@ -30,6 +30,7 @@ urlpatterns = [
     # URLs del panel para gestión de equipos (evita conflicto con Django admin)
     path('panel/equipo/<int:equipo_id>/eliminar/', views.eliminar_equipo, name='eliminar_equipo'),
     path('panel/equipo/<int:equipo_id>/actualizar/', views.actualizar_equipo, name='actualizar_equipo'),
+    path('panel/cliente/<int:cliente_id>/eliminar/', views.eliminar_cliente, name='eliminar_cliente'),
     
     path("recepcion/", include("recepcion.urls")),
     path("diagnostico/", include("diagnostico.urls")),

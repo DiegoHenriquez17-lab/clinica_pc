@@ -8,39 +8,41 @@
     <p class="text-gray-600 mt-1">Gestionar reparaciones de software</p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Panel izquierdo para envío con observación -->
-    <div id="transferPanel" class="hidden">
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Enviar a Hardware</h3>
-            <form id="transferForm" method="post" class="space-y-4">
-                {% csrf_token %}
-                <input type="hidden" id="transferReparacionId" name="reparacion_id">
+<!-- Panel de transferencia a pantalla completa -->
+<div id="transferPanel" class="hidden">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Enviar a Hardware</h3>
+        <form id="transferForm" method="post" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" id="transferReparacionId" name="reparacion_id">
 
-                <div id="transferEquipoInfo" class="p-4 bg-gray-50 rounded-lg mb-4">
-                    <!-- Info del equipo se carga dinámicamente -->
-                </div>
+            <div id="transferEquipoInfo" class="p-4 bg-gray-50 rounded-lg mb-4">
+                <!-- Info del equipo se carga dinámicamente -->
+            </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Observación *</label>
-                    <textarea name="observacion" id="transferObservacion" rows="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Explique por qué se envía el equipo a hardware..." required></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Esta observación será registrada en el historial del equipo</p>
-                </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Observación *</label>
+                <textarea name="observacion" id="transferObservacion" rows="8" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Explique por qué se envía el equipo a hardware..." required></textarea>
+                <p class="text-xs text-gray-500 mt-1">Esta observación será registrada en el historial del equipo</p>
+            </div>
 
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-200">
+            <div class="flex gap-3">
+                <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-200">
                     <i class="fas fa-exchange-alt mr-2"></i>Enviar a Hardware
                 </button>
-
-                <button type="button" onclick="cancelarTransferencia()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded-lg transition duration-200">
+                <button type="button" onclick="cancelarTransferencia()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg transition duration-200">
                     Cancelar
                 </button>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="lg:col-span-2">
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
+<div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+    <!-- Listado de equipos -->
+    <div class="xl:col-span-2">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden h-[calc(100vh-16rem)] flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold text-gray-800">Equipos en Software</h3>
                 </div>
@@ -91,10 +93,9 @@
                         {% endif %}
                     </div>
                 </form>
-                    </form>
-                </div>
             </div>
-            <div class="divide-y divide-gray-200">
+
+            <div class="divide-y divide-gray-200 overflow-y-auto flex-1">
                 {% for reparacion in reparaciones_sw %}
                     <div class="p-6 hover:bg-gray-50 cursor-pointer" onclick="seleccionarReparacion({{ reparacion.id }}, '{{ reparacion.diagnostico.equipo.id }}', '{{ reparacion.diagnostico.cliente.nombre }}', '{{ reparacion.diagnostico.equipo.tipo_equipo }}', '{{ reparacion.diagnostico.diagnostico|escapejs }}')">
                         <div class="flex justify-between items-start">
@@ -128,10 +129,13 @@
                                 <p class="text-xs text-gray-500 mt-2">Asignado: {{ reparacion.fecha_inicio|date:"d/m/Y H:i" }}</p>
                             </div>
                             <div class="flex flex-col space-y-2 ml-4">
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                <button type="button" onclick="event.stopPropagation(); mostrarDetalleRecepcion({{ reparacion.diagnostico.equipo.id }})" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                    <i class="fas fa-eye mr-2"></i>Ver Detalle
+                                </button>
+                                <button type="button" onclick="event.stopPropagation(); seleccionarReparacion({{ reparacion.id }}, '{{ reparacion.diagnostico.equipo.id }}', '{{ reparacion.diagnostico.cliente.nombre }}', '{{ reparacion.diagnostico.equipo.tipo_equipo }}', '{{ reparacion.diagnostico.diagnostico|escapejs }}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
                                     <i class="fas fa-code mr-2"></i>Trabajar
                                 </button>
-                                <button type="button" onclick="mostrarFormularioTransferencia({{ reparacion.id }}, '{{ reparacion.diagnostico.equipo.id }}', '{{ reparacion.diagnostico.cliente.nombre }}', '{{ reparacion.diagnostico.equipo.tipo_equipo }}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                <button type="button" onclick="event.stopPropagation(); mostrarFormularioTransferencia({{ reparacion.id }}, '{{ reparacion.diagnostico.equipo.id }}', '{{ reparacion.diagnostico.cliente.nombre }}', '{{ reparacion.diagnostico.equipo.tipo_equipo }}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
                                     <i class="fas fa-exchange-alt mr-2"></i>Enviar a Hardware
                                 </button>
                             </div>
@@ -147,9 +151,10 @@
         </div>
     </div>
 
-    <div>
-        <div id="softwareFormContainer" class="bg-white rounded-xl shadow-md p-6 hidden">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Actualizar Estado</h3>
+    <!-- Panel de trabajo -->
+    <div class="xl:col-span-2">
+        <div id="softwareFormContainer" class="bg-white rounded-xl shadow-md p-6 hidden sticky top-0 max-h-[calc(100vh-16rem)] overflow-y-auto">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Actualizar Estado</h3>
             <form method="post" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" id="reparacionId" name="reparacion_id">
@@ -160,26 +165,27 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Trabajo Realizado *</label>
-                    <textarea name="trabajo_realizado" rows="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required></textarea>
+                    <textarea name="trabajo_realizado" rows="10" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Software Instalado</label>
-                    <textarea name="software_instalado" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    <textarea name="software_instalado" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Costo Final</label>
-                    <input type="number" name="costo_final" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" min="0" step="0.01">
+                    <input type="number" name="costo_final" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" min="0" step="0.01">
                 </div>
 
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition duration-200">
-                    <i class="fas fa-check mr-2"></i>Marcar como Completado
-                </button>
-                
-                <button type="button" onclick="cancelarSoftware()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded-lg transition duration-200">
-                    Cancelar
-                </button>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition duration-200">
+                        <i class="fas fa-check mr-2"></i>Marcar como Completado
+                    </button>
+                    <button type="button" onclick="cancelarSoftware()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg transition duration-200">
+                        Cancelar
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -192,6 +198,27 @@
     </div>
 </div>
 
+<!-- Modal de detalles de recepción -->
+<div id="modalDetalleRecepcion" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>Detalle de Recepción
+                    </h3>
+                    <button onclick="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="contenidoDetalleRecepcion" class="p-6">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function seleccionarReparacion(id, equipoId, cliente, tipo, diagnostico) {
     document.getElementById('softwareFormContainer').classList.remove('hidden');
@@ -199,16 +226,20 @@ function seleccionarReparacion(id, equipoId, cliente, tipo, diagnostico) {
 
     document.getElementById('reparacionId').value = id;
     document.getElementById('equipoInfo').innerHTML = `
-        <h4 class="font-semibold text-gray-900">#${equipoId} - ${cliente}</h4>
-        <p class="text-sm text-gray-600">${tipo}</p>
-        <p class="text-sm text-gray-700 mt-2"><strong>Diagnóstico:</strong> ${diagnostico}</p>
+        <h4 class=\"font-semibold text-gray-900\">#${equipoId} - ${cliente}</h4>
+        <p class=\"text-sm text-gray-600\">${tipo}</p>
+        <p class=\"text-sm text-gray-700 mt-2\"><strong>Diagnóstico:</strong> ${diagnostico}</p>
     `;
+
+    // Desplazar hacia el formulario
+    document.getElementById('softwareFormContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function cancelarSoftware() {
     document.getElementById('softwareFormContainer').classList.add('hidden');
     document.getElementById('softwarePlaceholder').classList.remove('hidden');
-    document.querySelector('form').reset();
+    const form = document.querySelector('#softwareFormContainer form');
+    if (form) form.reset();
 }
 
 function mostrarFormularioTransferencia(reparacionId, equipoId, cliente, tipo) {
@@ -228,17 +259,34 @@ function mostrarFormularioTransferencia(reparacionId, equipoId, cliente, tipo) {
 
     // Cargar información del equipo
     document.getElementById('transferEquipoInfo').innerHTML = `
-        <h4 class="font-semibold text-gray-900">Equipo #${equipoId}</h4>
-        <p class="text-sm text-gray-600">${cliente}</p>
-        <p class="text-sm text-gray-600 mt-1">${tipo}</p>
-        <p class="text-sm text-gray-600 mt-1">Enviando a Hardware</p>
+        <h4 class=\"font-semibold text-gray-900\">Equipo #${equipoId}</h4>
+        <p class=\"text-sm text-gray-600\">${cliente}</p>
+        <p class=\"text-sm text-gray-600 mt-1\">${tipo}</p>
+        <p class=\"text-sm text-gray-600 mt-1\">Enviando a Hardware</p>
     `;
 }
 
 function cancelarTransferencia() {
     document.getElementById('transferPanel').classList.add('hidden');
     document.getElementById('softwarePlaceholder').classList.remove('hidden');
-    document.getElementById('transferForm').reset();
+    const tform = document.getElementById('transferForm');
+    if (tform) tform.reset();
+}
+
+function mostrarDetalleRecepcion(equipoId) {
+    document.getElementById('modalDetalleRecepcion').classList.remove('hidden');
+    fetch(`/recepcion/detalle/${equipoId}/`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('contenidoDetalleRecepcion').innerHTML = data.success ? data.html : '<div class="text-center text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Error al cargar los detalles</div>';
+        })
+        .catch(() => {
+            document.getElementById('contenidoDetalleRecepcion').innerHTML = '<div class="text-center text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Error de conexión</div>';
+        });
+}
+
+function cerrarModalDetalle() {
+    document.getElementById('modalDetalleRecepcion').classList.add('hidden');
 }
 </script>
 {% endblock %}
