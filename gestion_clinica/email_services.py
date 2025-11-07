@@ -223,8 +223,9 @@ def send_email_with_fallback_services(to_email: str, subject: str, message: str,
     services = get_available_email_services()
 
     # Si el proyecto está en modo de desarrollo con backend de consola, usar Django EmailMessage
-    # Esto permite que las boletas se impriman en la consola cuando EMAIL_PROVIDER=console
-    if getattr(settings, 'EMAIL_PROVIDER', '').lower() == 'console':
+    # SOLO cuando NO haya servicios API configurados. Esto evita que se priorice console
+    # cuando por ejemplo BREVO_API_KEY ya está presente.
+    if getattr(settings, 'EMAIL_PROVIDER', '').lower() == 'console' and not services:
         try:
             logger.info('ℹ️ EMAIL_PROVIDER=console detectado: enviando email usando Django console backend')
             email = EmailMessage(subject=subject, body=message, to=[to_email])
