@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'recepcion',
     'diagnostico',
     'entrega',
+    "rest_framework",
+    "api",
 ]
 
 MIDDLEWARE = [
@@ -250,3 +252,10 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_FAIL_SILENTLY = False  # Para detectar errores
 EMAIL_MAX_RETRIES = 3  # Número de reintentos
 EMAIL_RETRY_DELAY = 5  # Segundos entre reintentos
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ]
+}

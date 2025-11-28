@@ -37,6 +37,7 @@ urlpatterns = [
     path("recepcion/", include("recepcion.urls")),
     path("diagnostico/", include("diagnostico.urls")),
     path("entrega/", include("entrega.urls")),
+    path("api/", include("api.urls")),
     path("", include("login_app.urls")),
     # Explorador de Base de Datos (estilo panel)
     path('panel/db/login/', views.db_login, name='db_login'),
@@ -44,6 +45,8 @@ urlpatterns = [
     path('panel/db/', views.db_home, name='db_home'),
     path('panel/db/<str:model_key>/', views.db_model_list, name='db_model_list'),
     path('panel/db/<str:model_key>/<int:pk>/', views.db_model_detail, name='db_model_detail'),
+    # 👇 NUEVA ruta para la API
+    path("api/", include("api.urls"))
 ]
 
 # Servir archivos multimedia en desarrollo

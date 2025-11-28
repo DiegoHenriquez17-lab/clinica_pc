@@ -6,9 +6,6 @@ import os
 import requests
 import base64
 from typing import Dict, List, Optional
-from django.conf import settings
-from django.core.mail import EmailMessage
-from .email_utils import EmailSenderRobust
 import logging
 
 logger = logging.getLogger(__name__)
@@ -221,46 +218,13 @@ def send_email_with_fallback_services(to_email: str, subject: str, message: str,
     Intenta enviar email con servicios de respaldo en orden de prioridad
     """
     services = get_available_email_services()
-
-    # Si el proyecto está en modo de desarrollo con backend de consola, usar Django EmailMessage
-    # SOLO cuando NO haya servicios API configurados. Esto evita que se priorice console
-    # cuando por ejemplo BREVO_API_KEY ya está presente.
-    if getattr(settings, 'EMAIL_PROVIDER', '').lower() == 'console' and not services:
-        try:
-            logger.info('ℹ️ EMAIL_PROVIDER=console detectado: enviando email usando Django console backend')
-            email = EmailMessage(subject=subject, body=message, to=[to_email])
-            if attachment_data:
-                email.attach(attachment_name, attachment_data, 'application/pdf')
-            email.send(fail_silently=False)
-            return {
-                'success': True,
-                'message': 'Email enviado usando console backend',
-                'provider': 'console'
-            }
-        except Exception as e:
-            logger.error(f'❌ Error enviando email con console backend: {e}')
-            # continuar con el flujo normal
     
     if not services:
-        # No hay servicios API configurados: intentar usar SMTP/Django como fallback
-        try:
-            logger.info('🔁 No hay servicios API configurados, intentando SMTP/Django como fallback')
-            smtp_sender = EmailSenderRobust()
-            smtp_result = smtp_sender.send_email_with_retry(
-                subject=subject,
-                message=message,
-                to_emails=[to_email],
-                attachment_data=attachment_data,
-                attachment_name=attachment_name
-            )
-            return smtp_result
-        except Exception as e:
-            logger.error(f'❌ Fallback SMTP falló: {e}')
-            return {
-                'success': False,
-                'message': 'No hay servicios de email alternativos configurados y el intento SMTP falló',
-                'provider': 'none'
-            }
+        return {
+            'success': False,
+            'message': 'No hay servicios de email alternativos configurados',
+            'provider': 'none'
+        }
     
     last_error = None
     

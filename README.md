@@ -113,6 +113,10 @@ DB_PASSWORD=tu_contraseña
 DB_HOST=127.0.0.1
 DB_PORT=5432
 EMAIL_PROVIDER=console
+
+# Servicios de email basados en API (opcional)
+# BREVO_API_KEY=tu_api_key_de_brevo
+# SENDGRID_API_KEY=tu_api_key_de_sendgrid
 ```
 
 ## 🧩 6. Aplicar migraciones
@@ -150,3 +154,27 @@ O, si el sistema no reconoce Django (raro, pero seguro):
 ```cmd
 .\venv\Scripts\python manage.py runserver
 ```
+
+## 9. API REST para Clientes
+La carpeta `api/` expone un endpoint REST construido con Django REST Framework.
+
+- Base URL: `http://127.0.0.1:8000/api/`
+- Recurso disponible: `clientes`
+
+| Método | Ruta | Descripción |
+| ------ | ---- | ----------- |
+| GET | `/api/clientes/` | Lista todos los clientes registrados |
+| POST | `/api/clientes/` | Crea un cliente (requiere autenticación) |
+| GET | `/api/clientes/{id}/` | Detalle de un cliente |
+| PUT/PATCH | `/api/clientes/{id}/` | Actualiza un cliente |
+| DELETE | `/api/clientes/{id}/` | Elimina un cliente |
+
+Endpoints disponibles:
+
+- GET `/api/clientes/` — Lista todos los clientes registrados.
+- POST `/api/clientes/` — Crea un cliente (requiere autenticación).
+- GET `/api/clientes/{id}/` — Devuelve el detalle de un cliente específico.
+- PUT/PATCH `/api/clientes/{id}/` — Actualiza los datos de un cliente.
+- DELETE `/api/clientes/{id}/` — Elimina un cliente.
+
+Los endpoints usan autenticación estándar de Django (sesión o token). Si accedes desde el navegador estando autenticado en el panel de administración, podrás crear y modificar registros directamente desde la interfaz web que entrega DRF. Para consumirlos desde herramientas externas (Postman, Thunder Client, etc.) asegúrate de enviar las credenciales o tokens correspondientes.
